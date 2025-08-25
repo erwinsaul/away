@@ -94,3 +94,45 @@ class calificaciones(BaseModel):
         """Genera una matriz de calificaciones para reportes."""
         from .laboratorio import Laboratorio
         
+        #Obtener estudiantes del paralelo
+        estudiantes =  paralelo.estudiantes.order_by(Estudiante.nombre)
+
+        # Obtener laboratorio de la materia
+        laboratorios = (Laboratorio.select()
+                        .where(Laboratorio.id_materia == paralelo.id_materia)
+                        .order_by(Laboratorio.numero))
+        
+        matriz = []
+
+        for estudiante in estudiantes:
+            fila = {
+                'estudiante': estudiante.nombre,
+                'ci': estudiante.ci,
+                'grupo': estudiante.grupo,
+                'calificaciones': {},
+                'promedio': 0.0
+            }
+
+            total_notas = 0
+            count_notas = 0
+
+            for lab in laboratorios:
+                try:
+                    cal = cls.get(
+                        (cls.id_estudiante == estudiante) &
+                        (cls.id_laboratorio == lab)
+                    )
+                    nota = cal.calificacion if cal.calificacion else 0
+                    fila['calificaciones'][f"lab_{lab.numero}"] = nota
+
+                    if cal.calificacion:
+                        total_notas = total_notas + cal.calificacion
+                        count_notas = count_notas + 1
+                
+                except cls.DoesNotExist:
+                    fila['calificaciones'][f"lab_{lab.numero}"] = None
+            
+            fila['promedio'] = round(total_notas / count_notas, 2) if count_notas > 0 else 0.0
+            matriz.append(fila)
+        
+        return matriz     
