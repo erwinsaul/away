@@ -74,4 +74,24 @@ class Laboratorio(BaseModel):
             'reprobados': len(notas) - aprobados
         }
 
+    @classmethod
+    def obtener_por_materia(cls, materia, ordenar_por_numero=True):
+        """Obtiene todos los laboratorios de una materia"""
+        query = cls.select().where(cls.id_materia == materia)
+        if ordenar_por_numero:
+            query = query.order_by(cls.numero)
+        
+        return query
+    
+    @classmethod
+    def obtener_siguiente_numero(cls, materia):
+        """ Obtiene el siguiente numero de laboratorio para una materia """
+        ultimo = (cls.select()
+            .where(cls.id_materia == materia)
+            .order_by(cls.numero.desc())
+            .first())
+        
+        return (ultimo.numero + 1) if ultimo else 1
+    
+
     

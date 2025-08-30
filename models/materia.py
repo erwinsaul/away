@@ -45,7 +45,7 @@ class Materia(BaseModel):
             return cls.get(cls.sigla == sigla.upper())
         except cls.DoesNotExist:
             return None
-
+    
     def estadisticas_completas(self):
         """Retorna estadísticas completas de la materia"""
         return {
@@ -72,3 +72,5 @@ class Materia(BaseModel):
                     .order_by(cls.sigla.desc())
                     .first())
         return (ultimo.numero + 1) if ultimo else 1
+
+    
