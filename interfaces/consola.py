@@ -352,3 +352,293 @@ class InterfazConsola:
                 print("[ERROR] No se pudo crear el paralelo.")
         except ValueError:
             print("[ERROR] El ID de materia no es válido.")
+
+    def listar_paralelos_por_materia(self):
+        """ Lista de paralelos de una materia específica """
+        print("\n--- Listar Paralelos por Materia ---")
+
+        # Mostrar materias disponibles
+        materias = MateriaManager.listar_materias()
+        if not materias:
+            print("No hay materias registradas.")
+            return
+        
+        print()
+        print("Materias Disponibles")
+
+        for materia in materias:
+            print(f"{materia.id:2d} | {materia.sigla:10s} | {materia.materia:20s}")
+        
+        try:
+            materia_id = int(input("\nID de la materia: "))
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia_id)
+
+            if not paralelos:
+                print("No hay paralelos registrados en esta materia.")
+                return
+
+            print()
+            print(f"--- Paralelos ---")
+            print("ID | Nombre  | Docente | Estudiantes | Grupos")
+            print("-"*80)
+
+            for paralelo in paralelos:
+                print(f"{paralelo.id:2d} | {paralelo.nombre:20s} | {paralelo.docente_teoria:10s} | {paralelo.contar_estudiantes():5d} | {paralelo.contar_grupos():5d}")
+        
+        except ValueError:
+            print("[ERROR] ID de materia no válido")
+        
+    def actualizar_paralelo(self):
+        """ Actualiza un paralelo existente """
+        print()
+        print("--- Actualizar Paralelo ---")
+
+        self.listar_paralelos_por_materia()
+
+        try:
+            paralelo_id = int(input("\nID del paralelo a actualizar:"))
+            paralelo  = ParaleloManager.obtener_paralelo(paralelo_id)
+            if not paralelo:
+                print("[ERROR] No existe paralelo con ese ID.")
+                return
+            
+            print()
+            print(f"Actualizando el paralelo: {paralelo.nombre}")
+            print("Deje en blanco para mantener el valor actual.")
+
+            nuevo_nombre = input("Nuevo nombre ({paralelo.nombre}): ").strip()
+            nuevo_docente = input("Nuevo docente ({paralelo.docente_teoria}): ").strip().upper()
+
+            campos = {} 
+            if nuevo_nombre:
+                campos["nombre"] = nuevo_nombre
+            
+            if nuevo_docente:
+                campos["docente_teoria"] = nuevo_docente
+            
+            if not campos:
+                print("No se realizaron cambios.")
+                return
+            
+            if ParaleloManager.actualizar_paralelo(paralelo_id, **campos):
+                print("[OK] Paralelo actualizado exitosamente.")
+            else:
+                print("[ERROR] No se pudo actualizar el paralelo.")
+        
+        except ValueError:
+            print("[ERROR] ID de paralelo no válido")
+    
+    def eliminar_paralelo(self):
+        """ Elimina un paralelo existente """
+        
+        print()
+        print("--- Eliminar Paralelo ---")
+
+        # Listar paralelos por materia
+        self.listar_paralelos_por_materia()
+
+        try:
+            paralelo_id = int(input("\nID del paralelo a eliminar:"))
+            paralelo = ParaleloManager.obtener_paralelo(paralelo_id)
+            if not paralelo:
+                print("[ERROR] No existe el paralelo con este ID")
+                return
+            
+            print(f"\nParalelo a eliminar: {paralelo.nombre} - {paralelo.docente_teoria}")
+            print(f"Estudiantes inscritos: {paralelo.contar_estudiantes()}")
+
+            confirmacion = input("\n¿Está seguro de eliminar el paralelo? (s/N): ").strip().lower()
+
+            if confirmacion != "s":
+                print("Operacion Cancelada")
+                return
+            
+            # Preguntas si forzar eliminación
+            forzar = False
+            if paralelo.contar_estudiantes() > 0:
+                forzar_input = input("Eliminar con todos los estudiantes inscritos? (s/N)").strip().lower()
+                forzar = forzar_input == 's'
+            
+            resultado = ParaleloManager.eliminar_paralelo(paralelo_id, forzar)
+
+            if resultado['success']:
+                print(f"[OK] {resultado['mensaje']}")
+            else:
+                print(f"[ERROR] {resultado['mensaje']}")
+        
+        except ValueError:
+            print("[ERROR] ID de paralelo no válido")
+        
+    def estadisticas_paralelo(self):
+        """ Muestra estadísticas de un paralelo específico """
+        print("")
+        print("--- Estadísticas de Paralelo ---")
+
+        # Listar paralelos por materia
+        self.listar_paralelos_por_materia()
+
+        try:
+            paralelo_id = int(input("\nID del paralelo: "))
+            stats = EstudianteManager.obtener_estadisticas_paralelo(paralelo_id)
+
+            if 'error' in stats:
+                print(f"[ERROR] {stats['error']}")
+                return
+            
+            print("")
+            print(f"\n--- Estadísticas: {stats['paralelo_info']} ---")
+            print(f"Total Estudiantes: {stats['total_estudiantes']}")
+            print(f"Total Grupos: {stats['total_grupos']}")
+            print(f"Estudiantes sin Grupo: {stats['estudiantes_sin_grupo']}")
+            print(f"Promedio General: {stats['promedio_general']}")
+            if stats['grupos_lista']:
+                print(f"Grupos: {stats['grupos_lista']}")
+
+        except ValueError:
+            print("[ERROR] ID de paralelo no válido")
+    
+    # ==========================================================================
+    # GESTIÓN DE ESTUDIANTES
+    # ==========================================================================
+    def menu_estudiantes(self):
+        """ Menú completo de gestión de estudiantes """
+        while True:
+            print("")
+            print("-"*40)
+            print("     GESTIÓN DE ESTUDIANTES")
+            print("-"*40)
+            print("1. Registrar Estudiante")
+            print("2. Listar Estudiantes por Paralelo")
+            print("3. Buscar estudiante por CI")
+            print("4. Actualizar Estudiante")
+            print("5. Eliminar Estudiante")
+            print("6. Organizar Grupos")
+            print("7. Estadísticas de paralelo")
+            print("0. Volver al menú principal")
+
+            opcion = self.obtener_opcion()
+
+            if opcion == "1":
+                self.registrar_estudiante()
+            elif opcion == "2":
+                self.listar_estudiantes_por_paralelo()
+            elif opcion == "3":
+                self.buscar_estudiante()
+            elif opcion == "4":
+                self.actualizar_estudiante()
+            elif opcion == "5":
+                self.eliminar_estudiante()
+            elif opcion == "6":
+                self.organizar_grupos()
+            elif opcion == "7":
+                self.estadisticas_estudiantes_paralelo()
+            elif opcion == "0":
+                break
+            else:
+                print("[ERROR] Opción no válida.")
+    
+    def registrar_estudiante(self):
+        """ Registra un nuevo estudiante """
+
+        print("")
+        print("--- Registrar Estudiante ---")
+
+        # Mostrar materias y paralelos disponibles
+        materias = MateriaManager.listar_materias()
+
+        if not materias:
+            print("[ERROR] No hay materias registradas. Debe registrar una materia primero.")
+            return
+        
+        # Mostrar estructura de materias y paralelos
+        print("\nEstrucutara de Materias:")
+        for materia in materias:
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
+            print(f"{materia.sigla} | {materia.materia}")
+            for paralelo in paralelos:
+                print(f"ID: {paralelo.id} - Paralelo: {paralelo.paralelo} - Docente: {paralelo.docente_teoria} - Estudiantes: {paralelo.contar_estudiantes()}")
+        
+        try:
+            paralelo_id = int(input("\nID del paralelo:"))
+            nombre = input("Nombre del estudiante:").strip().upper()
+
+            if not nombre:
+                print("[ERROR] El nombre del estudiante es obligatorio.")
+                return
+            
+            ci = input("Cedula de identidad: "),strip()
+            if not ci:
+                print("[ERROR] El CI es obligatorio.")
+                return
+            
+            grupo = input("Grupo (Opcional): ").strip().upper()
+
+            estudiante = EstudianteManager.registrar_estudiante(nombre, ci, paralelo_id, grupo)
+        
+            if estudiante: 
+                print("\n[OK] Estudiante {nombre} registrado exitosamente.")
+            else:
+                print("\n[ERROR] No se registro al estudiante.")
+        
+        except ValueError:
+            print("[ERROR] ID de paralelo no válido")
+    
+    def listar_estudiantes_por_paralelo(self):
+        """ Lista estudiantes de un paralelo específico """
+        print("\n--- Listar Estudiantes por Paralelo ---")
+
+        materias = MateriaManager.listar_materias()
+
+        if not materias:
+            print("[ERROR] No hay materias registradas.")
+            return
+        
+        print("\nParalelo Disponibles:")
+        for materia in materias:
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
+            for paralelo in paralelos:
+                print(f"{paralelo.id} - {materia.sigla} Paralelo {paralelo.paralelo} - Docente: {paralelo.docente_teoria} ({paralelo.contar_estudiantes()})")
+            
+        try:
+            paralelo_id = int(input("\nID del paralelo:"))
+
+            print("\nOrdenar por:")
+            print("1. Nombre (default)")
+            print("2. Grupo")
+            print("3. CI")
+
+            orden_opcion = input("Opcion (1-3): ").strip() or "1"
+            orden_map = {"1": "nombre", "2": "grupo", "3": "ci"}
+            orden = orden_map[orden_opcion]
+
+            estudiantes = EstudianteManager.listar_por_paralelo(paralelo_id, orden)
+
+            if not estudiantes:
+                print("No hay estudiantes registrados en este paralelo.")
+                return
+            
+            print(f"\n---Estudiantes del Paralelo {paralelo_id}---")
+            print("ID | CI                | Nombre                 | Grupo              | Promedio")
+            print("-"*80)
+
+            for estudiante in estudiantes:
+                grupo_str = estudiante.grupo if estudiante.grupo else "Sin Grupo"
+                promedio = estudiante.promedio_calificaciones()
+                print(f"{estudiante.id:2d} | {estudiante.ci:10s} | {estudiante.nombre:20s} | {grupo_str:10s} | {promedio:5.2f}")
+
+        except ValueError:
+            print("[ERROR] ID de paralelo no válido")
+
+
+        
+    
+
+
+
+
+
+
+
+
+
+
