@@ -16,7 +16,7 @@ class CalificacionManager:
     """
 
     @staticmethod
-    def registrar_calificacion(laboratorio_idi, estudiante_id, calificacion, observacion=None):
+    def registrar_calificacion(laboratorio_id, estudiante_id, calificacion, observacion=None):
         """
         Registra una calificación
 

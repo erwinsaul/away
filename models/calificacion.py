@@ -41,7 +41,7 @@ class calificaciones(BaseModel):
         puntaje_max = self.id_laboratorio.puntaje_maximo
         return round(self.calificacion / puntaje_max * 100, 2)
     
-    def estado_aprobación():
+    def estado_aprobacion():
         """Retorna el estado de la aprobación"""
         if not self.calificacion:
             return "Sin Nota"
