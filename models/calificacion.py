@@ -9,7 +9,7 @@ from .estudiante import Estudiante
 from .laboratorio import Laboratorio
 from datetime import datetime
 
-class calificaciones(BaseModel):
+class Calificacion(BaseModel):
     """
     Representa una calificación específica de un  estudiante de un laboratorio.
 

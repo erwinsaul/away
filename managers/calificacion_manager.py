@@ -3,7 +3,7 @@ Manager para gestionar calificaciones.
 Contiene toda la lógica relacionada con crear, buscar y moficiar calificaciones.
 """
 
-from models.calificacion import Calificaciones
+from models.calificacion import Calificacion
 from models.estudiante import Estudiante
 from models.laboratorio import Laboratorio
 from peewee import IntegrityError

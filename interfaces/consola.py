@@ -4,6 +4,7 @@ Interfaz de consola para el Sistema de gestión de laboratorios.
 
 import os
 import sys
+
 from models.database import inicializar_bd, cerrar_bd
 from managers.materia_manager import MateriaManager
 from managers.paralelo_manager import ParaleloManager
@@ -123,7 +124,7 @@ class InterfazConsola:
         elif opcion == "6":
             self.estadisticas_materias()
         elif opcion == "0":
-            break
+            return 
         else:
             print("[ERROR] Opción no válida.")
     
@@ -312,7 +313,7 @@ class InterfazConsola:
         elif opcion == "5":
             self.estadisticas_paralelos()
         elif opcion == "0":
-            break
+            return
         else:
             print("[ERROR] Opción no válida.")
 
@@ -383,7 +384,7 @@ class InterfazConsola:
             print("-"*80)
 
             for paralelo in paralelos:
-                print(f"{paralelo.id:2d} | {paralelo.nombre:20s} | {paralelo.docente_teoria:10s} | {paralelo.contar_estudiantes():5d} | {paralelo.contar_grupos():5d}")
+                print(f"{paralelo.id:2d} | {paralelo.paralelo:20s} | {paralelo.docente_teoria:10s} | {paralelo.contar_estudiantes():5d} | {paralelo.contar_grupos():5d}")
         
         except ValueError:
             print("[ERROR] ID de materia no válido")
@@ -403,11 +404,11 @@ class InterfazConsola:
                 return
             
             print()
-            print(f"Actualizando el paralelo: {paralelo.nombre}")
+            print(f"Actualizando el paralelo: {paralelo.paralelo}")
             print("Deje en blanco para mantener el valor actual.")
 
-            nuevo_nombre = input("Nuevo nombre ({paralelo.nombre}): ").strip()
-            nuevo_docente = input("Nuevo docente ({paralelo.docente_teoria}): ").strip().upper()
+            nuevo_nombre = input(f"Nuevo nombre ({paralelo.paralelo}): ").strip()
+            nuevo_docente = input(f"Nuevo docente ({paralelo.docente_teoria}): ").strip().upper()
 
             campos = {} 
             if nuevo_nombre:
@@ -444,7 +445,7 @@ class InterfazConsola:
                 print("[ERROR] No existe el paralelo con este ID")
                 return
             
-            print(f"\nParalelo a eliminar: {paralelo.nombre} - {paralelo.docente_teoria}")
+            print(f"\nParalelo a eliminar: {paralelo.paralelo} - {paralelo.docente_teoria}")
             print(f"Estudiantes inscritos: {paralelo.contar_estudiantes()}")
 
             confirmacion = input("\n¿Está seguro de eliminar el paralelo? (s/N): ").strip().lower()
