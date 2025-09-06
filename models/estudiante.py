@@ -42,7 +42,7 @@ class Estudiante(BaseModel):
         from .calificacion import Calificacion
         calificaciones = self.calificaciones.where(Calificacion.calificacion.is_null(False))
 
-        if not calificaciones.exist():
+        if not calificaciones.exists():
             return 0.0
 
         total = sum(cal.calificaciones for cal in calificaciones)
@@ -69,7 +69,7 @@ class Estudiante(BaseModel):
         return resultado
     
     @classmethod
-    def obtener_por_ci(cls, ci):
+    def buscar_por_ci(cls, ci):
         """Busca estudiante por cédula de identidad"""
         try:
             return cls.get(cls.ci == ci)

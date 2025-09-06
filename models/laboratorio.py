@@ -28,7 +28,7 @@ class Laboratorio(BaseModel):
         order_by = ('numero',)
     
     def __str__(self):
-        return f"{sef.numero}: {self.titulo} ({self.id_materia.sigla})"
+        return f"{self.numero}: {self.titulo} ({self.id_materia.sigla})"
 
     def contar_calificaciones(self):
         """Cuenta calificaciones resgistradas para este laboratorio"""
@@ -39,7 +39,7 @@ class Laboratorio(BaseModel):
         from .calificacion import Calificacion
         calificaciones = self.calificaciones.where(Calificacion.calificacion.is_null(False))
 
-        if not calificaciones.exist():
+        if not calificaciones.exists():
             return 0.0
         
         total = sum(cal.calificacion for cal in calificaciones)
@@ -51,7 +51,7 @@ class Laboratorio(BaseModel):
 
         calificacion = self.calificaciones.where(Calificacion.calificacion.is_null(False))
 
-        if not calificacion.exist():
+        if not calificacion.exists():
             return {
                 'total_calificaciones': 0,
                 'promedio': 0.0,

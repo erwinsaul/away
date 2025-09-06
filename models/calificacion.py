@@ -41,7 +41,7 @@ class Calificacion(BaseModel):
         puntaje_max = self.id_laboratorio.puntaje_maximo
         return round(self.calificacion / puntaje_max * 100, 2)
     
-    def estado_aprobacion():
+    def estado_aprobacion(self):
         """Retorna el estado de la aprobación"""
         if not self.calificacion:
             return "Sin Nota"
@@ -51,7 +51,7 @@ class Calificacion(BaseModel):
 
     def es_aprobado(self):
         """Retorna True si la calificación es aprobatoria"""
-        return self.estado_aprobación() == "Aprobado"
+        return self.estado_aprobacion() == "Aprobado"
     
     @classmethod
     def obtener_por_paralelo(cls, paralelo):

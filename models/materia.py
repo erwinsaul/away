@@ -23,7 +23,7 @@ class Materia(BaseModel):
     def __str__(self):
         return f"{self.sigla} - {self.materia}"
     
-    def contar_parelelos(self):
+    def contar_paralelos(self):
         """Cuenta cuántos paralelos tiene la materia"""
         return self.paralelos.count()
 

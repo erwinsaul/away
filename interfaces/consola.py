@@ -564,7 +564,7 @@ class InterfazConsola:
                 print("[ERROR] El nombre del estudiante es obligatorio.")
                 return
             
-            ci = input("Cedula de identidad: "),strip()
+            ci = input("Cedula de identidad: ").strip()
             if not ci:
                 print("[ERROR] El CI es obligatorio.")
                 return
@@ -574,7 +574,7 @@ class InterfazConsola:
             estudiante = EstudianteManager.registrar_estudiante(nombre, ci, paralelo_id, grupo)
         
             if estudiante: 
-                print("\n[OK] Estudiante {nombre} registrado exitosamente.")
+                print(f"\n[OK] Estudiante {nombre} registrado exitosamente.")
             else:
                 print("\n[ERROR] No se registro al estudiante.")
         
@@ -669,7 +669,7 @@ class InterfazConsola:
             print("[ERROR] El CI es obligatorio.")
             return
         
-        estudiante = EstudianteManager.obtener_por_ci(ci)
+        estudiante = EstudianteManager.buscar_por_ci(ci)
 
         if not estudiante:
             print(f"No se encontró estudiante con CI {ci}.")
@@ -679,13 +679,13 @@ class InterfazConsola:
         print("Deje en blanco para mantener el valor actual.")
 
         # Obtener nuevos valores
-        nombre = input("Nuevo nombre ({estudiante.nombre}): ").strip().upper()
+        nombre = input(f"Nuevo nombre ({estudiante.nombre}): ").strip().upper()
         ci = input(f"CI ({estudiante.ci}): ").strip()
         grupo = input(f"Grupo ({estudiante.grupo or 'Sin Grupo'}): ").strip().upper()
 
         campos = {}
         if nombre:
-            campos["nombre"] = nuevo_nombre
+            campos["nombre"] = nombre
             
         if ci:
             campos["ci"] = ci
@@ -712,7 +712,7 @@ class InterfazConsola:
             print("[ERROR] El CI es obligatorio.")
             return
         
-        estudiante = EstudianteManager.obtener_por_ci(ci)
+        estudiante = EstudianteManager.buscar_por_ci(ci)
 
         if not estudiante:
             print(f"No se encontró estudiante con CI {ci}.")
@@ -851,7 +851,7 @@ class InterfazConsola:
             resultado = LaboratorioManager.crear_laboratorio(materia_id, titulo, descripcion, puntaje_maximo)
 
             if resultado:
-                print(f"[OK] Laboratorio creado xitosamente: {resultado}")
+                print(f"[OK] Laboratorio creado exitosamente: {resultado}")
             else:
                 print("[ERROR] No se pudo crear el laboratorio")
         
@@ -864,7 +864,7 @@ class InterfazConsola:
         print("\n--- Listar Laboatorios por Materia ---")
 
         #Mostrar materias disponibles
-        materias = MateriaManager.listar_materia()
+        materias = MateriaManager.listar_materias()
 
         if not materias:
             print("[ERROR] No hay materias registradas")
@@ -1086,7 +1086,7 @@ class InterfazConsola:
             print(f"Puntaje máximo: {laboratorio.puntaje_maximo}")
 
             ci = input("\CI del estudiante:").strip()
-            estudiante = EstudianteManager.obtener_por_ci(ci)
+            estudiante = EstudianteManager.buscar_por_ci(ci)
 
             if not estudiante:
                 print("[ERROR] No existe estudiante con ese CI.")
@@ -1095,14 +1095,14 @@ class InterfazConsola:
             print(f"Estudiante: {estudiante.nombre}")
 
             try:
-                calificacion = float(iput("Calificación: "))
+                calificacion = float(input("Calificación: "))
             except ValueError:
                 print("[ERROR] La calificación debe ser un número.")
                 return
             
             observaciones = input("Observaciones (Opcional): ").strip() or None
 
-            resultado = CalificacionManager.registrar_calificacion(laboratorio_id, estudiante_id, calificacion, observaciones) 
+            resultado = CalificacionManager.registrar_calificacion(laboratorio_id, estudiante.id, calificacion, observaciones) 
 
             if resultado:
                 print(f"[OK] Calificación registrada exitosamente.")
@@ -1162,7 +1162,7 @@ class InterfazConsola:
                     print(f"  ID: {laboratorio.id} - {laboratorio.titulo}")
 
         try:
-            laboratorio_id = int(input("\nID del laboratorio: "))
+            laboratorio_id = int(input("\nID del laboratorio: ").strip())
             laboratorio = LaboratorioManager.obtener_laboratorio(laboratorio_id)
 
             if not laboratorio:
@@ -1172,7 +1172,7 @@ class InterfazConsola:
             calificaciones = CalificacionManager.obtener_calificaciones_laboratorio(laboratorio_id)
 
             if not calificaciones:
-                print("No hay calificaciones registradas para {laboratorio}.")
+                print(f"No hay calificaciones registradas para {laboratorio}.")
                 return
             
             print(f"\n--- Calificaciones de {laboratorio} ---")
@@ -1182,17 +1182,18 @@ class InterfazConsola:
             for calificacion in calificaciones:
                 estudiante = calificacion.id_estudiante
                 estado = calificacion.estado_aprobacion()
-                fecha = calificacion.fecha_registro_strftime("%d %m %Y")
+                fecha = calificacion.fecha_registro.strftime("%d %m %Y")
                 nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion else "Sin nota"
-                print(f"{calificacion.id:2d} | {estudiante.ci:10s} | {estudiante.nombre:20s} | {nota_str:5.2f} | {estado:10s} | {fecha}")
+                print(f"{calificacion.id:2d} | {estudiante.ci:10s} | {estudiante.nombre:20s} | {nota_str} | {estado:10s} | {fecha}")
             
             # Mostrar estadísticas
             stats = laboratorio.estadisticas_detalladas()
             print(f"\nPromedio del Laboratorio: {stats['promedio']:.2f}")
             print(f"Aprobados: {stats['aprobados']}")
             print(f"Reprobados: {stats['reprobados']}")
-            print(f"Sin nota: {stats['sin_nota']}")
 
+        except Exception as e:
+            print(f"[ERROR] {e}")
         except ValueError:
             print("[ERROR] ID de laboratorio no válido")
     
@@ -1201,7 +1202,7 @@ class InterfazConsola:
         print("\n--- Actualizar Calificación ---")
 
         ci = input("CI del estudiante:").strip()
-        estudiante = EstudianteManager.obtener_por_ci(ci)
+        estudiante = EstudianteManager.buscar_por_ci(ci)
         if not estudiante:
             print("[ERROR] No existe estudiante con ese CI")
             return
@@ -1269,7 +1270,7 @@ class InterfazConsola:
 
         ci = input("CI del estudiante:").strip()
 
-        estudiante = EstudianteManager.obtener_por_ci(ci)
+        estudiante = EstudianteManager.buscar_por_ci(ci)
         if not estudiante:
             print("[ERROR] No existe estudiante con ese CI")
             return
@@ -1371,7 +1372,7 @@ class InterfazConsola:
                     calificacion = float(calificacion_str.strip())
 
                     # Verificar que el estudiante existe
-                    estudiante = EstudianteManager.obtener_por_ci
+                    estudiante = EstudianteManager.buscar_por_ci
                     if not estudiante:
                         print("[ERROR] No existe estudiante con ese CI")
                         return
@@ -1482,6 +1483,7 @@ class InterfazConsola:
     
     def generar_reporte_pdf(self):
         """ Genera un reporte PDF por paralelo """
+        from utils.pdf_exporter import PDFExporter
         print("\n--- Generar Reporte PDF ---")
         # Mostrar paralelos disponibles
         materias = MateriaManager.listar_materias()

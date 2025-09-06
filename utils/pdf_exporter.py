@@ -62,7 +62,7 @@ class PDFExporter:
             styles = getSampleStyleSheet()
 
             # Agregar elementos del reporte
-            PDFExporter._agregar_encabezado(contenido, style)
+            PDFExporter._agregar_encabezado(contenido, styles)
             PDFExporter._agregar_info_materia(contenido, materia, paralelo, styles)
             PDFExporter._agregar_lista_estudiantes(contenido, paralelo, styles)
             PDFExporter._agregar_matriz_calificaciones(contenido, paralelo, styles)
@@ -113,23 +113,23 @@ class PDFExporter:
         Agrega información de la materia y paralelo.
         """
         fecha_actual = datetime.now().strftime("%d de %m de %Y")
-        infor_data = [
-            ['Materia: ', materia.maateria],
+        info_data = [
+            ['Materia: ', materia.materia],
             ['Sigla: ', materia.sigla],
-            ['Paralelo: ', paralelo, paralelo],
+            ['Paralelo: ', paralelo.paralelo],
             ['Docente: ', paralelo.docente_teoria],
             ['Fecha: ', fecha_actual]
         ]
 
         tabla_info = Table(info_data, colWidths=[4*cm, 8*cm])
-        tabla_info.setStyle(TableStyle[
+        tabla_info.setStyle(TableStyle([
             ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
             ('ALIGN', (1, 0), (1, -1), 'LEFT'),
             ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
             ('FONTNAME', (1,0), (1, -1), 'Helvetica'),
             ('FONTSIZE', (0,0), (-1, -1), 11),
             ('BOTTOMPADDING', (0,0), (-1, -1), 8),
-        ])
+        ]))
 
         contenido.append(tabla_info)
         contenido.append(Spacer(1, 25))
@@ -270,7 +270,7 @@ class PDFExporter:
         contenido.append(titulo_seccion)
         contenido.append(Spacer(1, 10))
 
-        stats = Calificacion.obtener_estadisticas_paralelo(paralelo)
+        stats = Calificacion.estadisticas_paralelo(paralelo)
 
         stats_data = [
             ['Total de calificaciones', str(stats.get('total_calificaciones', 0))],
