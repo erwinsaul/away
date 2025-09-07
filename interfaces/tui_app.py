@@ -155,7 +155,7 @@ class MateriasScreen(Screen):
         Binding("escape", "volver", "Volver"),
     ]
 
-    def compose(self) - ComposeResult:
+    def compose(self) -> ComposeResult:
         """ Estructura de la pantalla de materias """
         yield Header()
         yield Static("GESTIÓN DE MATERIAS", classes="titulo-seccion")
@@ -274,7 +274,7 @@ class ParalelosScreen(Screen):
 
         yield Static("GESTIÓN DE PARALELOS", classes="titulo-seccion")
 
-        with Container(classes="contenedor-principal")::
+        with Container(classes="contenedor-principal"):
             with Horizontal(classes="barra-botones"):
                 yield Select([("Seleccione materia...", None)], id="select-materia")
                 yield Button("Nuevo Paralelo", id="btn-nuevo", variant="primary")
@@ -397,6 +397,156 @@ class ParalelosScreen(Screen):
             if select.value:
                 self.cargar_paralelos(select.value)
             self.notify("Paralelo eliminado", severity="success")
+
+class EstudiantesScreen(Screen):
+    """ Pantall de gestión de estudiantes """
+    BINDINGS = [
+        Binding("n", "nuevo_estudiante", "Nuevo"),
+        Binding("e", "editar_estudiante", "Editar"),
+        Binding("d", "eliminar_estudiante", "Eliminar"),        
+        Binding("r", "refrescar", "Refrescar"),
+        Binding("escape", "volver", "Volver"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+
+        yield Static("GESTIÓN DE ESTUDIANTES", classes="titulo-seccion")
+
+        with Container(classes="contenedor-principal"):
+            with Horizontal(classes="barra-botones"):
+                yield Select([("Seleccione paralelo...", None)], id="select-paralelo")
+                yield Button("Nuevo Estudiante", id="btn-nuevo", variant="primary")
+                yield Button("Editar", id="btn-editar")
+                yield Button("Eliminar", id="btn-eliminar", variant="error")
+            
+            yield DataTable(id="tabla-estudiantes", cursor_type="row")
+        
+        yield Footer()
+    
+    def on_ready(self):
+        """ Inicializa la pantalla """
+        self.title = "AWAY - Gestón de Estudiantes"
+        self.cargar_paralelos_select()
+    
+    def cargar_paralelos_select(self):
+        """ Carga paralelos en el selector """
+        select = self.query_one("#select-paralelo", Select)
+        materias = MateriaManager.listar_materias()
+
+        opciones = [("Seleccione paralelo...", None)]
+
+        for materia in materias:
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
+            for paralelo in paralelos:
+                opciones.append((f"{materia.sigla} - {paralelo.paralelo}", paralelo.id))
+        
+        select.set_options(opciones)
+    
+    def cargar_estudiantes(self, paralelo_id):
+        """ Carga estudiantes de un paralelo """
+        tabla = self.query_one("#tabla-estudiantes", DataTable)
+        tabla.clear(columns=True)
+
+        tabla.add_columns("ID", "CI","Nombre", "Grupo", "Promedio")
+
+        estudiantes = EstudianteManager.listar_estudiantes_por_paralelo(paralelo_id)
+
+        for estudiante in estudiantes:
+            tabla.add_row(
+                str(estudiante.id),
+                estudiante.ci,
+                estudiante.nombre,
+                estudiante.grupo or "Sin asignar",
+                f"{estudiante.promedio_calificaciones():.2f}",
+                key=str(estudiante.id)
+            )
+
+    def on_select_changed(self, event: Select.Changed):
+        """ Maneja cambio de paralelo """
+        if event.value and event.value != None:
+            self.cargar_estudiantes(event.value)
+    
+    def on_button_pressed(self, event: Button.Pressed):
+        """ Maneja eventos de los botones """
+        if event.button.id == "btn-nuevo":
+            self.action_nuevo_estudiante()
+        elif event.button.id == "btn-editar":
+            self.action_editar_estudiante()
+        elif event.button.id == "btn-eliminar":
+            self.action_eliminar_estudiante()
+    
+    def action_nuevo_estudiante(self):
+        """ Nuevo estudiante """
+        select = self.query_one("#select-paralelo", Select)
+        if not select.value:
+            self.notify("Seleccione un paralelo", severity="warning")
+            return
+        
+        self.app.push_screen(FormularioEstudianteScreen(select.value), self.callback_formulario)
+
+    def action_editar_estudiante(self):
+        """ Editar Estudiante Seleccionado """
+        tabla = self.query_one("#tabla-estudiantes", DataTable)
+
+        if tabla.cursor_row < 0:
+            self.notify("Seleccione un estudiante para editar", severity="warning")
+            return
+        
+        row_key = tabla.get_row_at(tabla.cursor_row)
+        estudiante_id = int(row_key[0])
+
+        estudiante = EstudianteManager.obtener_estudiante(estudiante_id)
+        if estudiante:
+            self.app.push_screen(FormularioEstudianteScreen(estudiante.id_paralelo.id, estudiante), self.callback_formulario)
+    
+    def action_eliminar_estudiante(self):
+        """ Eliminar estudiante seleccionado """
+        tabla = self.query_one("#tabla-estudiantes", DataTable)
+
+        if tabla.cursor_row < 0:
+            self.notify("Seleccione un estudiante para eliminar", severity="warning")
+            return
+        
+        row_key = tabla.get_row_at(tabla.cursor_row)
+        estudiante_id = int(row_key[0])
+
+        self.app.push_screen(ConfirmarEliminacionScreen("estudiante", estudiante_id), self.callback_eliminacion)
+    
+    def action_refrescar(self):
+        """ Refrescar los datos """
+        select = self.query_one("#select-paralelo", Select)
+        if select.value:
+            self.cargar_estudiantes(select.value)
+        self.notify("Datos actualizados")
+    
+    def action_volver(self):
+        """ Volver al menú principal """
+        self.app.pop_screen()
+    
+    def callback_formulario(self, resultado):
+        """ Callback del formulario """
+        if resultado:
+            select = self.query_one("#select-paralelo", Select)
+            if select.value:
+                self.cargar_estudiantes(select.value)
+            self.notify("Estudiante guardado exitosamente", severity="success")
+    
+    def callback_eliminacion(self, confirmado):
+        """ Callback eliminación """
+        if confirmado:
+            select = self.query_one("#select-paralelo", Select)
+            if select.value:
+                self.cargar_estudiantes(select.value)
+            self.notify("Estudiante eliminado exitosamente", severity="success")
+    
+class LaboratoriosScreen(Screen):
+
+
+
+
+
+
 
 
 def main():
