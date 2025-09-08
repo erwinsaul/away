@@ -541,12 +541,388 @@ class EstudiantesScreen(Screen):
             self.notify("Estudiante eliminado exitosamente", severity="success")
     
 class LaboratoriosScreen(Screen):
+    """ Pantalla de laboratorios """
+    BINDINGS = [
+        Binding("n", "nuevo_laboratorio", "Nuevo"),
+        Binding("e", "editar_laboratorio", "Editar"),
+        Binding("d", "eliminar_laboratorio", "Eliminar"),
+        Binding("m", "cambiar_materia", "Cambiar Materia"),
+        Binding("r", "refrescar", "Refrescar"),
+        Binding("escape", "volver", "Volver"),
+    ]
 
+    def compose(self) -> ComposeResult:
 
+        yield Header()
+        yield Static("GESTIÓN DE LABORATORIOS", classes="titulo-seccion")
 
+        with Container(classes="contenedor-principal"):
+            with Horizontal(classes="barra-botones"):
+                yield Select([("Seleccione materia...", None)], id="select-materia")
+                yield Button("Nuevo Laboratorio", id="btn-nuevo", variant="primary")
+                yield Button("Editar", id="btn-editar")
+                yield Button("Eliminar", id="btn-eliminar", variant="error")
+            
+            yield DataTable(id="tabla-laboratorios", cursor_type="row")
 
+        yield Footer()
+    
+    def on_ready(self):
+        """ Inicializa la pantalla """
+        self.title = "AWAY - Gestón de Laboratorios"
+        self.cargar_materias_select()
+    
+    def cargar_materias_select(self):
+        """ Carga materias en el selector """
+        select = self.query_one("#select-materia", Select)
+        materias = MateriaManager.listar_materias()
 
+        opciones = [("Seleccione materia...", None)]
+        opciones.extend([(f"{materia.sigla} - {materia.materia}", materia.id) for materia in materias])
 
+        select.set_options(opciones)
+    
+    def cargar_laboratorios(self, materia_id):
+        """ Carga laboratorios de una materia """
+        tabla = self.query_one("#tabla-laboratorios", DataTable)
+        tabla.clear(columns=True)
+        tabla.add_columns("ID", "Num", "Titulo", "Puntaje", "Calificaciones")
+
+        laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia_id)
+
+        for laboratorio in laboratorios:
+            tabla.add_row(
+                str(laboratorio.id),
+                str(laboratorio.num),
+                laboratorio.titulo,
+                f"{laboratorio.puntaje_maximo:.2f}",
+                str(laboratorio.contar_calificaciones()),
+                key=str(laboratorio.id)
+            )
+        
+    def on_select_changed(self, event: Select.Changed):
+        """ Maneja cambio de materia """
+        if event.value and event.value != None:
+            self.cargar_laboratorios(event.value)
+    
+    def on_button_pressed(self, event: Button.Pressed):
+        """ Maneja eventos de botones """
+        if event.button.id == "btn-nuevo":
+            self.action_nuevo_laboratorio()
+        elif event.button.id == "btn-editar":
+            self.action_editar_laboratorio()
+        elif event.button.id == "btn-eliminar":
+            self.action_eliminar_laboratorio()
+    
+    def action_nuevo_laboratorio(self):
+        """ Abre formulario para nuevo laboratorio """
+        select = self.query_one("#select-materia", Select)
+
+        if not select.value:
+            self.notify("Seleccione una materia", severity="warning")
+            return
+        
+        self.app.push_screen(FormularioLaboratorioScreen(select.value), self.callback_formulario)
+    
+    def action_editar_laboratorio(self):
+        """ Edite laboratorio seleccionado """
+        tabla = self.query_one("#tabla-laboratorios", DataTable)
+        if tabla.cursor_row < 0:
+            self.notify("Seleccione un laboratorio para editar", severity="warning")
+            return
+        
+        row_key = tabla.get_row_at(tabla.cursor_row)
+        laboratorio_id = int(row_key[0])
+        laboratorio = LaboratorioManager.obtener_laboratorio(laboratorio_id)
+
+        if laboratorio:
+            self.app.push_screen(FormularioLaboratorioScreen(laboratorio.id_materia.id, laboratorio), self.callback_formulario)
+    
+    def action_eliminar_laboratorio(self):
+        """ Elimina laboratorio seleccionado """
+        tabla = self.query_one("#tabla-laboratorios", DataTable)
+
+        if tabla.cursor_row < 0:
+            self.notify("Seleccione un laboratorio para eliminar", severity="warning")
+            return
+        
+        row_key = tabla.get_row_at(tabla.cursor_row)
+        laboratorio_id = int(row_key[0])
+
+        self.app.push_screen(ConfirmarEliminacionScreen("laboratorio", laboratorio_id), self.callback_eliminacion)
+    
+    def action_cambiar_materia(self):
+        """ Enfoca el selector de materia """
+        select = self.query_one("#select-materia", Select)
+        select.focus()
+    
+    def action_refrescar(self):
+        """ Refresca los datos """
+        select = self.query_one("#select-materia", Select)
+        if select.value:
+            self.cargar_laboratorios(select.value)
+        self.notify("Datos actualizados")
+    
+    def action_volver(self):
+        """ Vuelve al menú principal """
+        self.app.pop_screen()
+    
+    def callback_formulario(self, resultado):
+        """ Callback Formulario """
+        if resultado:
+            select = self.query_one("#select-materia", Select)
+            if select.value:
+                self.cargar_laboratorios(select.value)
+            self.notify("Laboratorio guardado exitosamente", severity="success")
+    
+    def callback_eliminacion(self, confirmado):
+        """ Callback de eliminación """
+        if confirmado:
+            select = self.query_one("#select-materia", Select)
+            if select.value:
+                self.cargar_laboratorios(select.value)
+            self.notify("Laboratorio eliminado exitosamente", severity="success")
+
+class CalificacionesScreen(Screen):
+    """ Pantalla de gestión de calificaciones """
+    BINDINGS = [
+        Binding("n", "nuevo_calificacion", "Nueva"),
+        Binding("e", "editar_calificacion", "Editar"),
+        Binding("d", "eliminar_calificacion", "Eliminar"),
+        Binding("l", "cambiar_laboratorio", "Cambiar Laboratorio"),
+        Binding("r", "refrescar", "Refrescar"),
+        Binding("escape", "volver", "Volver"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Static("GESTIÓN DE CALIFICACIONES", classes="titulo-seccion")
+
+        with Container(classes="contenedor-principal"):
+            with Horizontal(classes="barra-botones"):
+                yield Select([("Seleccione laboratorio...", None)], id="select-laboratorio")
+                yield Button("Nueva Calificacion", id="btn-nuevo", variant="primary")
+                yield Button("Editar", id="btn-editar")
+                yield Button("Eliminar", id="btn-eliminar", variant="error")
+            
+            yield DataTable(id="tabla-calificaciones", cursor_type="row")
+        
+        yield Footer()
+    
+    def on_ready(self):
+        """ Inicializa la pantalla """
+        self.title = "AWAY - Gestón de Calificaciones"
+        self.cargar_laboratorios_select()
+
+    def cargar_laboratorios_select(self):
+        """ Carga laboratorios en el selector """
+        select = self.query_one("#select-laboratorio", Select)
+        materias = MateriaManager.listar_materias()
+
+        opciones = [("Seleccione laboratorio...", None)]
+        
+        for materia in materias:
+            laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
+            for laboratorio in laboratorios:
+                opciones.append((f"{materia.sigla} - {laboratorio.numero} - {laboratorio.titulo}", laboratorio.id))
+        
+        select.set_options(opciones)
+    
+    def cargar_calificaciones(self, laboratorio_id):
+        """ Carga calificaciones de un laboratorio """
+        tabla = self.query_one("#tabla-calificaciones", DataTable)
+        tabla.clear(columns=True)
+
+        tabla.add_columns("ID", "CI", "Estudiante", "Calificacion", "Estado")
+
+        calificaciones = CalificacionManager.listar_calificaciones_por_laboratorio(laboratorio_id)
+
+        for calificacion in calificaciones:
+            estudiante = calificacion.id_estudiante
+            nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion else "Sin nota"
+            estado = calificacion.estado_aprobacion()
+
+            tabla.add_row(
+                str(calificacion.id),
+                estudiante.ci,
+                estudiante.nombre,
+                nota_str,
+                estado,
+                key=str(calificacion.id)
+            )
+
+        def on_select_changed(self, event: Select.Changed):
+            """ Maneja cambio de Laboratorio """
+            if event.value and event.value != None:
+                self.cargar_calificaciones(event.value)
+        
+        def on_button_pressed(self, event: Button.Pressed):
+            """ Maneja eventos de botones """
+            if event.button.id == "btn-nuev0":
+                self.action_nueva_calificacion()
+            elif event.button.id == "btn-editar":
+                self.action_editar_calificacion()
+            elif event.button.id == "btn-eliminar":
+                self.action_eliminar_calificacion()
+        
+        def action_nueva_calificacion(self):
+            """ Abre formulario para nueva calificación """
+            select = self.query_one("#select-laboratorio", Select)
+
+            if not select.value:
+                self.notify("Seleccione un laboratorio", severity="warning")
+                return
+            
+            self.app.push_screen(FormularioCalificacionScreen(select.value), self.callback_formulario)
+        
+        def action_editar_calificacion(self):
+            """ Edite calificacion seleccionado """
+            tabla = self.query_one("#tabla-calificaciones", DataTable)
+            if tabla.cursor_row < 0:
+                self.notify("Seleccione una calificacion para editar", severity="warning")
+                return
+
+            row_key = tabla.get_row_at(tabla.cursor_row)
+            calificacion_id = int(row_key[0])
+
+            select = self.query_one("#select-laboratorio", Select)
+
+            self.app.push_screen(FormularioCalificacionScreen(select.value, calificacion_id), self.callback_formulario)
+        
+        def action_eliminar_calificacion(self):
+            """ Elimina calificacion seleccionado """
+            
+            tabla = self.query_one("#tabla-calificaciones", DataTable)
+
+            if tabla.cursor_row < 0:
+                self.notify("Seleccione una calificacion para eliminar", severity="warning")
+                return
+            
+            row_key = tabla.get_row_at(tabla.cursor_row)
+            calificacion_id = int(row_key[0])
+
+            self.app.push_screen(ConfirmarEliminacionScreen("calificacion", calificacion_id), self.callback_eliminacion)
+
+        def action_cambiar_laboratorio(self):
+            """ Enfoca el selector de Laboratorio """
+            select = self.query_one("#select-laboratorio", Select)
+            select.focus()
+        
+        def action_refrescar(self):
+            """ Refresca los datos """
+            select = self.query_one("#select-laboratorio", Select)
+            if select.value:
+                self.cargar_calificaciones(select.value)
+            self.notify("Datos actualizados")
+        
+        def action_volver(self):
+            """ Vuelve al menú principal """
+            self.app.pop_screen()
+        
+        def callback_formulario(self, resultado):
+            """ Callback del Formulario """
+            if resultado:
+                select = self.query_one("#select-laboratorio", Select)
+                if select.value:
+                    self.cargar_calificaciones(select.value)
+                self.notify("Calificacion guardada exitosamente", severity="success")
+        
+        def callback_eliminacion(self, confirmado):
+            """ Callback de eliminación """
+            if confirmado:
+                select = self.query_one("#select-laboratorio", Select)
+                if select.value:
+                    self.cargar_calificaciones(select.value)
+                self.notify("Calificacion eliminada", severity="success")
+
+class ReportesScreen(Screen):
+    """ Pantalla de reportes y exportación """
+    BINDINGS = [
+        Binding("p", "generar_pdf", "Generar PDF"),
+        Binding("m", "mostrar_matriz", "Matriz"),
+        Binding("escape", "volver", "Volver"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+
+        yield Static("REPORTES Y EXPORTACIÓN", classes="titulo-seccion")
+
+        with Container(classes="contenedor-principal"):
+            with Horizontal(classes="barra-botones"):
+                yield Select([("Seleccione materia...", None)], id="select-paralelo")
+                yield Button("Generar PDF", id="btn-pdf", variant="primary")
+                yield Button("Mostrar Matriz", id="btn-matriz")
+            
+            yield Static("Seleccione un paralelo para generar el PDF", id="info_reportes")
+        
+        yield Footer()
+
+    def on_ready(self):
+        """ Inicializa la pantalla """
+        self.title = "AWAY - Reportes y Exportación"
+        self.cargar_paralelos_select()
+    
+    def cargar_paralelos_select(self):
+        """ Carga paralelos en el selector """
+
+        select = self.query_one("#select-paralelo", Select)
+        materias = MateriaManager.listar_materias()
+
+        opciones = [("Seleccione materia...", None)]
+
+        for materia in materias:
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
+            for paralelo in paralelos:
+                opciones.append((f"{materia.sigla} - Paralelo {paralelo.paralelo}", paralelo.id))
+        
+        select.set_options(opciones)
+    
+    def on_button_pressed(self, event: Button.Pressed):
+        """ Maneja eventos de botones """
+
+        if event.button.id == "btn-pdf":
+            self.action_generar_pdf()
+        elif event.button.id == "btn-matriz":
+            self.action_mostrar_matriz()
+    
+    def action_generar_pdf(self):
+        """ Genera reporte PDF """
+        select = self.query_one("#select-paralelo", Select)
+
+        if not select.value:
+            self.notify("Seleccione un paralelo", severity="warning")
+            return
+        
+        try:
+            archivo = PDFExporter.generar_reporte_paralelo(select.value)
+            if archivo:
+                self.notify(f"Reporte generado: {archivo}", severity="success")
+            else:
+                self.notify("Error al generar el PDF", severity="error")
+        except Exception as e:
+            self.notify(f"Error al generar el PDF: {e}", severity="error")
+    
+    def action_mostrar_matriz(self):
+        """ Muestra matriz de calificaciones """
+        select = self.query_one("#select-paralelo", Select)
+
+        if not select.value:
+            self.notify("Seleccione un paralelo", severity="warning")
+            return
+        
+        self.app.push_screen(MatrizScreen(select.value))
+
+    def action_volver(self):
+        """ Vuelve al menú principal """
+        self.app.pop_screen()
+
+class EstadisticasScreen(Screen):
+    """ Pantalla de estadísticas """
+    BINDINGS = [
+        Binding("escape", "volver", "Volver"),
+    ]
+    
 
 
 def main():
