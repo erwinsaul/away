@@ -923,6 +923,64 @@ class EstadisticasScreen(Screen):
         Binding("escape", "volver", "Volver"),
     ]
     
+    def compose(self) -> ComposeResult:
+        yield Header()
+
+        yield Static("ESTADÍSTICAS GENERALES", classes="titulo-seccion")
+
+        with ScrollableContainer():
+            yield Static("", classes="stats-content")
+        
+        yield Footer()
+
+    def on_ready(self):
+        """ Inicializa la pantalla """
+        selt.title = "AWAY - Estadísticas Generales"
+        self.cargar_estadisticas_generales()
+    
+    def cargar_estadisticas_generales(self):
+        """ Carga las estadísticas generales """
+
+        try:
+            stats = MateriaManager.obtener_estadisticas_generales()
+            materias = MateriaManager.listar_materias()
+
+            contenido = f"""
+            RESUMEN GENERAL DEL SISTEMA
+            {"=" * 60}
+            Total de materias: {stats['total_materias']:3d}
+            Total de paralelos: {stats['total_paralelos']:3d}
+            Total de estudiantes: {stats['total_estudiantes']:3d}
+            Total de laboratorios: {stats['total_laboratorios']:3d}
+            Promedio de paralelos por materia: {stats['promedio_paralelos_por_materia']:5.2f}
+            Promedio de estudiantes por materia: {stats['promedio_estudiantes_por_materia']:5.2f}
+            
+            DETALLE POR MATERIA
+            {'=' * 50}
+            Sigla      | Materia        | Paralelos      | Estudiantes        |Labs
+            {"-" * 50}
+            """
+
+            for materia in materias:
+                stats_materia = materia.estadisticas_completas()
+                contenido = contenido + f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estatudiante_total']:3d} | {stats_materia['laboratorios']:3d}\n"
+
+            stats_display = self.query_one("#stats-content", Static)
+            stats_display.update(contenido)
+
+        except Excepcion as e:
+            stats_display = self.query_one("#stats-content", Static)
+            stats_display.update(f"Error al cargar estadísticas: {e}")
+
+    def action_volver(self):
+        """ Vuelve al menú principal """
+        self.app.pop_screen()
+
+# ========================================================================
+# FORMULARIOS MODALES
+# ========================================================================
+
+    
 
 
 def main():
