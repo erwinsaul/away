@@ -17,7 +17,7 @@ class MateriaManager:
         Crea una nueva materia.
         Args:
             materia (str): Nombre de la materia
-            sigla (str): Sigla de la materia (ej: SIS1110)
+            sigla (str): Sigla de la materia (ej: SIS-1110)
         Returns:
             Materia: La materia creada
         """
