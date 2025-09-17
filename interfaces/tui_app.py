@@ -5,7 +5,7 @@ Interfaz TUI para Away - Sistema de Gestión de Laboratorios.
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Header, Footer, Static, DataTable, Input, Button, Select, TextArea, Label, Checkbox
-from textual.scree import Screen, ModalScreen
+from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
 from textual.message import Message
 
@@ -43,8 +43,8 @@ class MenuPrincipal(Screen):
 
         with Container(classes="panel-principal"):
             with Horizontal():
-                with Vertical(classes="panl-info"):
-                    yield Static("ESTADÍSTICAS GNERALES", classes="subtitulo")
+                with Vertical(classes="panel-info"):
+                    yield Static("ESTADÍSTICAS GENERALES", classes="subtitulo")
                     yield Static("", id="stats-display")
                 
                 with Vertical(classes="panel-info"):
@@ -163,7 +163,7 @@ class MateriasScreen(Screen):
         with Container(classes="contenedor-principal"):
             with Horizontal(classes="barra-botones"):
                 yield Button("Nueva Materia", id="btn-nueva", variant="primary")
-                yield Button("Editar", id="btn-ditar")
+                yield Button("Editar", id="btn-editar")
                 yield Button("Eliminar", id="btn-eliminar", variant="error")
                 yield Button("Refrescar", id="btn-refrescar")
             
@@ -172,8 +172,8 @@ class MateriasScreen(Screen):
         yield Footer()
     
     def on_ready(self):
-        """ Incializa la pantalla """
-        self.title = "AWAY - Gestón de Materias"
+        """ Inicializa la pantalla """
+        self.title = "AWAY - Gestión de Materias"
         self.cargar_materias()
     
     def cargar_materias(self):
@@ -184,7 +184,7 @@ class MateriasScreen(Screen):
         tabla.add_columns("ID", "Sigla", "Materia", "Paralelos",  "Estudiantes")
         materias = MateriaManager.listar_materias()
 
-        for materia in materias():
+        for materia in materias:
             tabla.add_row(
                 str(materia.id),
                 materia.sigla,
@@ -287,7 +287,7 @@ class ParalelosScreen(Screen):
     
     def on_ready(self):
         """ Inicializa la pantalla """
-        self.title = "AWAY - Gestón de Paralelos"
+        self.title = "AWAY - Gestión de Paralelos"
         self.cargar_materias_select()
     
     def cargar_materias_select(self):
@@ -353,7 +353,7 @@ class ParalelosScreen(Screen):
 
         paralelo = ParaleloManager.obtener_paralelo(paralelo_id)
         if paralelo:
-            self.app.push_screen(FormularioParaleloScreen(paralelo.id_materia.id, paralelo, docente_teoria), self.callback_formulario)
+            self.app.push_screen(FormularioParaleloScreen(paralelo.id_materia.id, paralelo), self.callback_formulario)
 
     def action_eliminar_paralelo(self):
         """ Elimina paralelo seleccionado """
@@ -371,7 +371,7 @@ class ParalelosScreen(Screen):
         select = self.query_one("#select-materia", Select)
         select.focus()
     
-    def action_refrescar(sel):
+    def action_refrescar(self):
         """ Refresca los datos """
         select = self.query_one("#select-materia", Select)
         if select.value:
@@ -399,7 +399,7 @@ class ParalelosScreen(Screen):
             self.notify("Paralelo eliminado", severity="success")
 
 class EstudiantesScreen(Screen):
-    """ Pantall de gestión de estudiantes """
+    """ Pantalla de gestión de estudiantes """
     BINDINGS = [
         Binding("n", "nuevo_estudiante", "Nuevo"),
         Binding("e", "editar_estudiante", "Editar"),
@@ -426,7 +426,7 @@ class EstudiantesScreen(Screen):
     
     def on_ready(self):
         """ Inicializa la pantalla """
-        self.title = "AWAY - Gestón de Estudiantes"
+        self.title = "AWAY - Gestión de Estudiantes"
         self.cargar_paralelos_select()
     
     def cargar_paralelos_select(self):
@@ -569,7 +569,7 @@ class LaboratoriosScreen(Screen):
     
     def on_ready(self):
         """ Inicializa la pantalla """
-        self.title = "AWAY - Gestón de Laboratorios"
+        self.title = "AWAY - Gestión de Laboratorios"
         self.cargar_materias_select()
     
     def cargar_materias_select(self):
@@ -686,7 +686,7 @@ class LaboratoriosScreen(Screen):
 class CalificacionesScreen(Screen):
     """ Pantalla de gestión de calificaciones """
     BINDINGS = [
-        Binding("n", "nuevo_calificacion", "Nueva"),
+        Binding("n", "nueva_calificacion", "Nueva"),
         Binding("e", "editar_calificacion", "Editar"),
         Binding("d", "eliminar_calificacion", "Eliminar"),
         Binding("l", "cambiar_laboratorio", "Cambiar Laboratorio"),
@@ -711,7 +711,7 @@ class CalificacionesScreen(Screen):
     
     def on_ready(self):
         """ Inicializa la pantalla """
-        self.title = "AWAY - Gestón de Calificaciones"
+        self.title = "AWAY - Gestión de Calificaciones"
         self.cargar_laboratorios_select()
 
     def cargar_laboratorios_select(self):
@@ -751,89 +751,89 @@ class CalificacionesScreen(Screen):
                 key=str(calificacion.id)
             )
 
-        def on_select_changed(self, event: Select.Changed):
-            """ Maneja cambio de Laboratorio """
-            if event.value and event.value != None:
-                self.cargar_calificaciones(event.value)
+    def on_select_changed(self, event: Select.Changed):
+        """ Maneja cambio de Laboratorio """
+        if event.value and event.value != None:
+            self.cargar_calificaciones(event.value)
+    
+    def on_button_pressed(self, event: Button.Pressed):
+        """ Maneja eventos de botones """
+        if event.button.id == "btn-nuevo":
+            self.action_nueva_calificacion()
+        elif event.button.id == "btn-editar":
+            self.action_editar_calificacion()
+        elif event.button.id == "btn-eliminar":
+            self.action_eliminar_calificacion()
+    
+    def action_nueva_calificacion(self):
+        """ Abre formulario para nueva calificación """
+        select = self.query_one("#select-laboratorio", Select)
+
+        if not select.value:
+            self.notify("Seleccione un laboratorio", severity="warning")
+            return
         
-        def on_button_pressed(self, event: Button.Pressed):
-            """ Maneja eventos de botones """
-            if event.button.id == "btn-nuev0":
-                self.action_nueva_calificacion()
-            elif event.button.id == "btn-editar":
-                self.action_editar_calificacion()
-            elif event.button.id == "btn-eliminar":
-                self.action_eliminar_calificacion()
+        self.app.push_screen(FormularioCalificacionScreen(select.value), self.callback_formulario)
+    
+    def action_editar_calificacion(self):
+        """ Edite calificacion seleccionado """
+        tabla = self.query_one("#tabla-calificaciones", DataTable)
+        if tabla.cursor_row < 0:
+            self.notify("Seleccione una calificacion para editar", severity="warning")
+            return
+
+        row_key = tabla.get_row_at(tabla.cursor_row)
+        calificacion_id = int(row_key[0])
+
+        select = self.query_one("#select-laboratorio", Select)
+
+        self.app.push_screen(FormularioCalificacionScreen(select.value, calificacion_id), self.callback_formulario)
+    
+    def action_eliminar_calificacion(self):
+        """ Elimina calificacion seleccionado """
         
-        def action_nueva_calificacion(self):
-            """ Abre formulario para nueva calificación """
-            select = self.query_one("#select-laboratorio", Select)
+        tabla = self.query_one("#tabla-calificaciones", DataTable)
 
-            if not select.value:
-                self.notify("Seleccione un laboratorio", severity="warning")
-                return
-            
-            self.app.push_screen(FormularioCalificacionScreen(select.value), self.callback_formulario)
+        if tabla.cursor_row < 0:
+            self.notify("Seleccione una calificacion para eliminar", severity="warning")
+            return
         
-        def action_editar_calificacion(self):
-            """ Edite calificacion seleccionado """
-            tabla = self.query_one("#tabla-calificaciones", DataTable)
-            if tabla.cursor_row < 0:
-                self.notify("Seleccione una calificacion para editar", severity="warning")
-                return
+        row_key = tabla.get_row_at(tabla.cursor_row)
+        calificacion_id = int(row_key[0])
 
-            row_key = tabla.get_row_at(tabla.cursor_row)
-            calificacion_id = int(row_key[0])
+        self.app.push_screen(ConfirmarEliminacionScreen("calificacion", calificacion_id), self.callback_eliminacion)
 
-            select = self.query_one("#select-laboratorio", Select)
-
-            self.app.push_screen(FormularioCalificacionScreen(select.value, calificacion_id), self.callback_formulario)
-        
-        def action_eliminar_calificacion(self):
-            """ Elimina calificacion seleccionado """
-            
-            tabla = self.query_one("#tabla-calificaciones", DataTable)
-
-            if tabla.cursor_row < 0:
-                self.notify("Seleccione una calificacion para eliminar", severity="warning")
-                return
-            
-            row_key = tabla.get_row_at(tabla.cursor_row)
-            calificacion_id = int(row_key[0])
-
-            self.app.push_screen(ConfirmarEliminacionScreen("calificacion", calificacion_id), self.callback_eliminacion)
-
-        def action_cambiar_laboratorio(self):
-            """ Enfoca el selector de Laboratorio """
-            select = self.query_one("#select-laboratorio", Select)
-            select.focus()
-        
-        def action_refrescar(self):
-            """ Refresca los datos """
+    def action_cambiar_laboratorio(self):
+        """ Enfoca el selector de Laboratorio """
+        select = self.query_one("#select-laboratorio", Select)
+        select.focus()
+    
+    def action_refrescar(self):
+        """ Refresca los datos """
+        select = self.query_one("#select-laboratorio", Select)
+        if select.value:
+            self.cargar_calificaciones(select.value)
+        self.notify("Datos actualizados")
+    
+    def action_volver(self):
+        """ Vuelve al menú principal """
+        self.app.pop_screen()
+    
+    def callback_formulario(self, resultado):
+        """ Callback del Formulario """
+        if resultado:
             select = self.query_one("#select-laboratorio", Select)
             if select.value:
                 self.cargar_calificaciones(select.value)
-            self.notify("Datos actualizados")
-        
-        def action_volver(self):
-            """ Vuelve al menú principal """
-            self.app.pop_screen()
-        
-        def callback_formulario(self, resultado):
-            """ Callback del Formulario """
-            if resultado:
-                select = self.query_one("#select-laboratorio", Select)
-                if select.value:
-                    self.cargar_calificaciones(select.value)
-                self.notify("Calificacion guardada exitosamente", severity="success")
-        
-        def callback_eliminacion(self, confirmado):
-            """ Callback de eliminación """
-            if confirmado:
-                select = self.query_one("#select-laboratorio", Select)
-                if select.value:
-                    self.cargar_calificaciones(select.value)
-                self.notify("Calificacion eliminada", severity="success")
+            self.notify("Calificacion guardada exitosamente", severity="success")
+    
+    def callback_eliminacion(self, confirmado):
+        """ Callback de eliminación """
+        if confirmado:
+            select = self.query_one("#select-laboratorio", Select)
+            if select.value:
+                self.cargar_calificaciones(select.value)
+            self.notify("Calificacion eliminada", severity="success")
 
 class ReportesScreen(Screen):
     """ Pantalla de reportes y exportación """
@@ -850,7 +850,7 @@ class ReportesScreen(Screen):
 
         with Container(classes="contenedor-principal"):
             with Horizontal(classes="barra-botones"):
-                yield Select([("Seleccione materia...", None)], id="select-paralelo")
+                yield Select([("Seleccione paralelo...", None)], id="select-paralelo")
                 yield Button("Generar PDF", id="btn-pdf", variant="primary")
                 yield Button("Mostrar Matriz", id="btn-matriz")
             
@@ -869,7 +869,7 @@ class ReportesScreen(Screen):
         select = self.query_one("#select-paralelo", Select)
         materias = MateriaManager.listar_materias()
 
-        opciones = [("Seleccione materia...", None)]
+        opciones = [("Seleccione paralelo...", None)]
 
         for materia in materias:
             paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
@@ -911,7 +911,7 @@ class ReportesScreen(Screen):
             self.notify("Seleccione un paralelo", severity="warning")
             return
         
-        self.app.push_screen(MatrizScreen(select.value))
+        self.app.push_screen(MatrizCalificacionesScreen(select.value))
 
     def action_volver(self):
         """ Vuelve al menú principal """
@@ -929,13 +929,13 @@ class EstadisticasScreen(Screen):
         yield Static("ESTADÍSTICAS GENERALES", classes="titulo-seccion")
 
         with ScrollableContainer():
-            yield Static("", classes="stats-content")
+            yield Static("", id="stats-content")
         
         yield Footer()
 
     def on_ready(self):
         """ Inicializa la pantalla """
-        selt.title = "AWAY - Estadísticas Generales"
+        self.title = "AWAY - Estadísticas Generales"
         self.cargar_estadisticas_generales()
     
     def cargar_estadisticas_generales(self):
@@ -963,12 +963,12 @@ class EstadisticasScreen(Screen):
 
             for materia in materias:
                 stats_materia = materia.estadisticas_completas()
-                contenido = contenido + f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estatudiante_total']:3d} | {stats_materia['laboratorios']:3d}\n"
+                contenido = contenido + f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estudiante_total']:3d} | {stats_materia['laboratorios']:3d}\n"
 
             stats_display = self.query_one("#stats-content", Static)
             stats_display.update(contenido)
 
-        except Excepcion as e:
+        except Exception as e:
             stats_display = self.query_one("#stats-content", Static)
             stats_display.update(f"Error al cargar estadísticas: {e}")
 
@@ -1001,7 +1001,7 @@ class FormularioMateriaScreen(ModalScreen):
 
             with Horizontal():
                 yield Button("Guardar", id="btn-guardar", variant="primary")
-                yield Button("Cancelar", id="btn-cancelara")
+                yield Button("Cancelar", id="btn-cancelar")
         
     def on_ready(self):
         """ Inicializa el formulario """
@@ -1016,7 +1016,7 @@ class FormularioMateriaScreen(ModalScreen):
         """ Maneja eventos de botones """
         if event.button.id == "btn-guardar":
             self.guardar()
-        elif event.button.id == "btn-cancelara":
+        elif event.button.id == "btn-cancelar":
             self.dismiss(False)
     
     def guardar(self):
@@ -1047,11 +1047,10 @@ class FormularioMateriaScreen(ModalScreen):
     
 class FormularioParaleloScreen(ModalScreen):
     """ Formulario modal para paralelos """
-    def __init__(self, materia_id, docente_teoria, paralelo=None):
+    def __init__(self, materia_id, paralelo=None):
         super().__init__()
         self.materia_id = materia_id
         self.paralelo = paralelo
-        self.docente_teoria = docente_teoria
         self.es_edicion = paralelo is not None
     
     def compose(self) -> ComposeResult:
@@ -1060,25 +1059,29 @@ class FormularioParaleloScreen(ModalScreen):
         with Container(id="dialog"):
             yield Static(titulo, id="title")
 
-            yield Label("Paralelo: ")
+            yield Label("Paralelo:")
             yield Input(placeholder="Nombre del paralelo", id="input-paralelo")
+
+            yield Label("Docente de Teoría:")
+            yield Input(placeholder="Nombre del docente", id="input-docente-teoria")
 
             with Horizontal():
                 yield Button("Guardar", id="btn-guardar", variant="primary")
-                yield Button("Cancelar", id="btn-cancelara")
+                yield Button("Cancelar", id="btn-cancelar")
     
     def on_ready(self):
         """ Inicializa el formulario """
         if self.es_edicion:
             self.query_one("#input-paralelo", Input).value = self.paralelo.paralelo
+            self.query_one("#input-docente-teoria", Input).value = self.paralelo.docente_teoria or ""
         
         self.query_one("#input-paralelo", Input).focus()
     
     def on_button_pressed(self, event: Button.Pressed):
         """ Maneja eventos de botones """
-        if event.button.id = "btn-guardar":
+        if event.button.id == "btn-guardar":
             self.guardar()
-        elif event.button.id = "btn-cancelar":
+        elif event.button.id == "btn-cancelar":
             self.dismiss(False)
     
     def guardar(self):
@@ -1092,20 +1095,22 @@ class FormularioParaleloScreen(ModalScreen):
         
         try:
             if self.es_edicion:
-                resultado = PaarleloManager.actualizar_paralelo(self.paralelo.id, paralelo=paralelo)
+                resultado = ParaleloManager.actualizar_paralelo(self.paralelo.id, paralelo=paralelo, docente_teoria=docente_teoria)
             else:
-                resultado = ParaleloManager.crear_paralelo(self.materia_id, paralelo)
+                resultado = ParaleloManager.crear_paralelo(self.materia_id, paralelo, docente_teoria)
 
             if resultado:
                 self.dismiss(True)
             else:
-                sef.notify(f"Error: {e}", severity="error")
+                self.notify("Error al guardar paralelo", severity="error")
+        except Exception as e:
+            self.notify(f"Error: {e}", severity="error")
 
 class FormularioEstudianteScreen(ModalScreen):
     """ Formulario modal para estudiantes """
 
     def __init__(self, paralelo_id, estudiante=None):
-        super().__init()
+        super().__init__()
         self.paralelo_id = paralelo_id
         self.estudiante = estudiante
         self.es_edicion = estudiante is not None
@@ -1144,13 +1149,13 @@ class FormularioEstudianteScreen(ModalScreen):
         elif event.button.id == "btn-cancelar":
             self.dismiss(False)
     
-    def guardar(self)
+    def guardar(self):
         """ Guarda el estudiante """
         nombre = self.query_one("#input-nombre", Input).value.strip()
         ci = self.query_one("#input-ci", Input).value.strip()
         grupo = self.query_one("#input-grupo", Input).value.strip()
 
-        if not nombre or no ci:
+        if not nombre or not ci:
             self.notify("Nombre y CI son obligatorios", severity="error")
             return
         
@@ -1163,12 +1168,13 @@ class FormularioEstudianteScreen(ModalScreen):
                     grupo=grupo or None
                 )
             else:
-                resultado = EstudianteManager.registrar_estudiante(nombre, ci, self.paralelo_id,grupo or None)
+                resultado = EstudianteManager.registrar_estudiante(nombre, ci, self.paralelo_id, grupo or None)
             
             if resultado:
                 self.dismiss(True)
             else:
                 self.notify("Error al guardar el estudiante", severity="error")
+
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
 
@@ -1186,11 +1192,11 @@ class FormularioLaboratorioScreen(ModalScreen):
         with Container(id="dialog"):
             yield Static(titulo, id="title")
 
-            yield Label("Titulo: ")
+            yield Label("Titulo:")
             yield Input(placeholder="Titulo del laboratorio", id="input-titulo")
 
-            yield Label("Descripcion: ")
-            yield Input(placeholder="Descripcion del Laboratorio", id="input-descripcion")
+            yield Label("Descripcion:")
+            yield TextArea(placeholder="Descripcion del Laboratorio", id="input-descripcion")
 
             yield Label("Puntaje Maximo:")
             yield Input(placeholder="100", id="input-puntaje")
@@ -1203,7 +1209,7 @@ class FormularioLaboratorioScreen(ModalScreen):
         """ Inicializa el formulario """
         if self.es_edicion:
             self.query_one("#input-titulo", Input).value = self.laboratorio.titulo
-            self.query_one("#input-descripcion", TextArea).value = self.laboratorio.descripcion or ""
+            self.query_one("#input-descripcion", TextArea).text = self.laboratorio.descripcion or ""
             self.query_one("#input-puntaje", Input).value = str(self.laboratorio.puntaje_maximo)
         
         self.query_one("#input-titulo", Input).focus()
@@ -1218,7 +1224,7 @@ class FormularioLaboratorioScreen(ModalScreen):
     def guardar(self):
         """ Guarda el laboratorio """
         titulo = self.query_one("#input-titulo", Input).value.strip()
-        descripcion = self.query_one("#input-descripcion", TextArea).value.strip()
+        descripcion = self.query_one("#input-descripcion", TextArea).text.strip()
         puntaje = self.query_one("#input-puntaje", Input).value.strip()
 
         if not titulo:
@@ -1226,7 +1232,7 @@ class FormularioLaboratorioScreen(ModalScreen):
             return
     
         try:
-            puntaje = float(puntaje_str) if puntaje_str else 100.0
+            puntaje_num = float(puntaje) if puntaje else 100.0
         except ValueError:
             self.notify("El puntaje debe ser un numero", severity="error")
             return
@@ -1237,7 +1243,7 @@ class FormularioLaboratorioScreen(ModalScreen):
                     self.laboratorio.id,
                     titulo=titulo,
                     descripcion=descripcion or None,
-                    puntaje_maximo=puntaje
+                    puntaje_maximo=puntaje_num
                 )
 
             else:
@@ -1245,7 +1251,7 @@ class FormularioLaboratorioScreen(ModalScreen):
                     self.materia_id,
                     titulo,
                     descripcion or None,
-                    puntaje
+                    puntaje_num
                 )
             
             if resultado:
@@ -1256,7 +1262,7 @@ class FormularioLaboratorioScreen(ModalScreen):
             self.notify(f"Error: {e}", severity="error")
     
 class FormularioCalificacionScreen(ModalScreen):
-    """ Formulario modal para califiaciones """
+    """ Formulario modal para calificaciones """
     def __init__(self, laboratorio_id, calificacion_id=None):
         super().__init__()
         self.laboratorio_id = laboratorio_id
@@ -1296,7 +1302,7 @@ class FormularioCalificacionScreen(ModalScreen):
                 pass
         
         if self.es_edicion:
-            self.query_one("#input-califcacion", Input).focus()
+            self.query_one("#input-calificacion", Input).focus()
         else:
             self.query_one("#input-ci", Input).focus()
 
@@ -1320,7 +1326,7 @@ class FormularioCalificacionScreen(ModalScreen):
         try:
             calificacion = float(calificacion_str)
         except ValueError:
-            self.notify("La calificaciń debes er un número", severity="error")
+            self.notify("La calificación debe ser un número", severity="error")
             return
         
         try:
@@ -1341,11 +1347,11 @@ class FormularioCalificacionScreen(ModalScreen):
                     self.notify("No existe estudiante por ese CI", severity="error")
                     return
                 
-                resultado = CalificacionManager.registrar_caificacion(
+                resultado = CalificacionManager.registrar_calificacion(
                     self.laboratorio_id,
                     estudiante.id,
                     calificacion, 
-                    bservaciones or None
+                    observaciones or None
                 )
             
             if resultado:
@@ -1368,7 +1374,7 @@ class ConfirmarEliminacionScreen(ModalScreen):
         with Container(id="dialog"):
             yield Static("Confirmar Eliminación", id="title")
             yield Static(f"Está seguro que desea eliminar este {self.tipo}?")
-            yield Static("Esta acción no se puede deshacer." classes="warning")
+            yield Static("Esta acción no se puede deshacer.", classes="warning")
 
             with Horizontal():
                 yield Button("Eliminar", id="btn-eliminar", variant="error")    
@@ -1389,13 +1395,13 @@ class ConfirmarEliminacionScreen(ModalScreen):
             elif self.tipo == "paralelo":
                 resultado = ParaleloManager.eliminar_paralelo(self.elemento_id, forzar=True)
             elif self.tipo == "estudiante":
-                resultado = EstudianteManager.eliminar_estudiante(self.elementi_id, forzar=True)
+                resultado = EstudianteManager.eliminar_estudiante(self.elemento_id, forzar=True)
             elif self.tipo=="laboratorio":
                 resultado = LaboratorioManager.eliminar_laboratorio(self.elemento_id, forzar=True)
             elif self.tipo == "calificacion":
                 resultado = CalificacionManager.eliminar_calificacion(self.elemento_id, forzar=True)
             else:
-                rersultado = {'success': False}
+                resultado = {'success': False}
             
             if resultado.get('success', False):
                 self.dismiss(True)
@@ -1454,7 +1460,7 @@ class OrganizarGruposScreen(ModalScreen):
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
     
-class MatrizCalificacionesScreen(ModalScreen):
+class MatrizCalificacionesScreen(Screen):
     """ Pantalla para mostrar la matriz de calificaciones """
     BINDINGS=[
         Binding("escape", "volver", "Volver")
@@ -1491,7 +1497,7 @@ class MatrizCalificacionesScreen(ModalScreen):
             from models.laboratorio import Laboratorio
 
             matriz = Calificacion.matriz_calificaciones_paralelo(paralelo)
-            laboratorio = list(Laboratorio.obtener_por_materia(paralelo.id_materia))
+            laboratorios = list(Laboratorio.obtener_por_materia(paralelo.id_materia))
 
             if not matriz or not laboratorios:
                 content = "No hay datos de calificaciones disponibles"
@@ -1502,7 +1508,7 @@ class MatrizCalificacionesScreen(ModalScreen):
                 #Encabezado
                 header = "Estudiante".ljust(25)
                 for laboratorio in laboratorios:
-                    header = header + " L{lab.numero:2d}"
+                    header = header + f" L{laboratorio.numero:2d}"
                 
                 header = header + " Prom"
                 content = content + header + "\n"
@@ -1513,7 +1519,7 @@ class MatrizCalificacionesScreen(ModalScreen):
                     linea = fila['estudiante'][:24].ljust(25)
 
                     for laboratorio in laboratorios:
-                        cal = fila['calificaciones'].get(f'lab_{lab.numero}')
+                        cal = fila['calificaciones'].get(f'lab_{laboratorio.numero}')
 
                         if cal is not None:
                             linea = linea + f" {cal.calificacion:2d}"
@@ -1660,7 +1666,7 @@ class LaboratoriosAppTUI(App):
     def on_ready(self):
         """ Se ejecuta cuando la aplicación está lista """
         inicializar_bd()
-        self.push_screen(MenuPrincipalScreen())
+        self.push_screen(MenuPrincipal())
         self.notify("Bienvenido a AWAY - Sistema de Gestión de Laboratorios", severity="information")
     
     def on_exit(self):
@@ -1671,7 +1677,7 @@ def main():
     """ Funcion principal """
     print("Iniciando AWAY")
     print("Use las teclas de navegacion indicadas en cada pantalla")
-    app = LaboratoriosAppTui()
+    app = LaboratoriosAppTUI()
 
     try:
         app.run()
@@ -1685,7 +1691,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-    
