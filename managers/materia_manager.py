@@ -98,7 +98,7 @@ class MateriaManager:
                     existe = Materia.select().where(
                         (Materia.sigla == sigla_nueva) &
                         (Materia.id != materia_id)
-                    ).exist()
+                    ).exists()
 
                     if existe:
                         print(f"[ERROR] Ya existe una materia con la sigla {sigla_nueva}")
@@ -107,8 +107,8 @@ class MateriaManager:
                 campos['sigla'] = sigla_nueva
 
             #Actualizar solo los campos proporcionados
-            for campo, calor in campos.items():
-                if hassattr(materia, campo):
+            for campo, valor in campos.items():
+                if hasattr(materia, campo):
                     if isinstance(valor, str):
                         setattr(materia, campo, valor.strip().upper())
                     else:
@@ -119,13 +119,13 @@ class MateriaManager:
             return True
         
         except Materia.DoesNotExist:
-            printf(f"[ERROR] No existe materia con ID {materia_id}")
+            print(f"[ERROR] No existe materia con ID {materia_id}")
             return False
         except IntegrityError:
-            printf(f"[ERROR] Error de integridad al actualizar")
+            print(f"[ERROR] Error de integridad al actualizar")
             return False
         except Exception as e:
-            printf(f"[ERROR] Error al actualizar: {e}")
+            print(f"[ERROR] Error al actualizar: {e}")
             return False
     
     @staticmethod
@@ -150,7 +150,7 @@ class MateriaManager:
 
             if not forzar and (num_paralelos > 0 or num_laboratorio > 0 or num_estudiantes > 0):
                 return {
-                    'succes': False,
+                    'success': False,
                     'mensaje': f'No se puede eliminar {materia.sigla}. Tiene {num_paralelos} paralelos, {num_laboratorio} laboratorios y {num_estudiantes} estudiantes',
                     'dependencias':{
                         'paralelos': num_paralelos,
@@ -161,7 +161,7 @@ class MateriaManager:
             
             # Si se fuerza la eliminación, eliminar dependencias primero
             if forzar:
-                from models.calificacion import calificacion
+                from models.calificacion import Calificacion
                 from models.estudiante import Estudiante
                 from models.paralelo import Paralelo
                 from models.laboratorio import Laboratorio
@@ -173,7 +173,7 @@ class MateriaManager:
                         eliminadas = Calificacion.delete().where(
                             Calificacion.id_estudiante == estudiante
                         ).execute()
-                        calificaciones_eliminadas = calificaciones_eliminadas
+                        calificaciones_eliminadas = calificaciones_eliminadas + eliminadas
                 
                 # Eliminar estudiantes
                 estudiantes_eliminados = 0
@@ -205,23 +205,23 @@ class MateriaManager:
             print(f"[OK] Materia {sigla_eliminada} eliminada")
 
             return {
-                'succes': True,
+                'success': True,
                 'mensaje': f'Materia {sigla_eliminada} eliminada',
                 'materia_eliminada': sigla_eliminada
             }
         except Materia.DoesNotExist:
             return {
-                'succes': False,
+                'success': False,
                 'mensaje': f'No existe materia con ID {materia_id}'
             }
         except Exception as e:
             return {
-                'succes': False,
+                'success': False,
                 'mensaje': f'Error al eliminar materia: {e}'
             }
     
     @staticmethod
-    def obtener_estadisticasgenerales():
+    def obtener_estadisticas_generales():
         """
         Obtiene estadísticas generales del sistema.
 

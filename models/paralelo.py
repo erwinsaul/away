@@ -55,8 +55,8 @@ class Paralelo(BaseModel):
             .select()
             .join(Estudiante)
             .where(Estudiante.id_paralelo == self) )
-        
-        if not calificaciones.exist():
+
+        if not calificaciones.exists():
             return 0.0
         
         total = sum(cal.calificacion for cal in calificaciones if cal.calificacion)

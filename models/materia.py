@@ -51,7 +51,7 @@ class Materia(BaseModel):
         return {
             "sigla": self.sigla,
             "materia": self.materia,
-            "paralelos": self.contar_parelelos(),
+            "paralelos": self.contar_paralelos(),
             "laboratorios": self.contar_laboratorios(),
             "estudiantes": self.contar_estudiantes_total(),
         }

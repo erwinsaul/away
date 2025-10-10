@@ -124,7 +124,7 @@ class EstudianteManager:
                     existe = Estudiante.select().where(
                         (Estudiante.ci == nuevo_ci) &
                         (Estudiante.id != estudiante_id)
-                    ).exist()
+                    ).exists()
 
                     if existe:
                         print("[ERROR] Ya existe estudiante con CI {nuevo_ci}")
@@ -197,13 +197,13 @@ class EstudianteManager:
             if not forzar and num_calificaciones > 0:
                 return {
                     'success': False,
-                    'message': f'No se puede eliminar {estudiante.nombre}. Tiene {num_calificaciones} calificaciones registradas.',
+                    'mensaje': f'No se puede eliminar {estudiante.nombre}. Tiene {num_calificaciones} calificaciones registradas.',
                     'calificaciones': num_calificaciones
                 }
             
             if forzar and num_calificaciones > 0:
                 # Eliminar calificaciones primero
-                from models.calificacion import calificaciones
+                from models.calificacion import Calificacion
 
                 calificaciones_eliminadas = Calificacion.delete().where(
                     Calificacion.id_estudiante == estudiante
@@ -215,8 +215,8 @@ class EstudianteManager:
             estudiante.delete_instance()
 
             return {
-                'sucess': True,
-                'message': f'Estudiante {estudiante_info} eliminado exitosamente',
+                'success': True,
+                'mensaje': f'Estudiante {estudiante_info} eliminado exitosamente',
             }
         
         except Estudiante.DoesNotExist:
@@ -250,11 +250,11 @@ class EstudianteManager:
             if not estudiantes:
                 return {
                     'success': False,
-                    'message': "No hay estudiantes en el paralelo"
+                    'mensaje': "No hay estudiantes en el paralelo"
                 }
 
             # Calcular número de grupos necesarios
-            total_estudiantes = len(estrudiantes)
+            total_estudiantes = len(estudiantes)
             num_grupos = (total_estudiantes + estudiantes_por_grupo - 1) // estudiantes_por_grupo
 
             grupos_creados = 0

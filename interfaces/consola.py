@@ -65,7 +65,7 @@ class InterfazConsola:
         """ Obtiene y valida la opción del Usuario"""
         while True:
             try:
-                opcion = input("Seleccione una opción:").strip()
+                opcion = input("Seleccione una opción: ").strip()
                 return opcion
             except EOFError:
                 return "0"
@@ -86,7 +86,7 @@ class InterfazConsola:
             self.menu_reportes()
         elif opcion == "7":
             self.menu_estadisticas_generales()
-        elif opcion == "0":
+        elif opcion == "8" or opcion == "0":
             self.salir()
         else:
             print("[ERROR] Opción no válida. Intente nuevamente.")
@@ -132,7 +132,7 @@ class InterfazConsola:
         """ Crea una nueva materia."""
         print("")
         print("--- Crear Nueva Materia ---")
-        materia = input("Nombre de la materia:").strip()
+        materia = input("Nombre de la materia: ").strip()
         if not materia:
             print("[ERROR] El nombre de la materia es obligatorio.")
             return
@@ -144,7 +144,7 @@ class InterfazConsola:
         
         resultado = MateriaManager.crear_materia(materia, sigla)
         if resultado:
-            print("[OK] Materia {sigla} creada exitosamente.")
+            print(f"[OK] Materia {sigla} creada exitosamente.")
         else:
             print("[ERROR] No se pudo crear la materia.")
     
@@ -169,19 +169,19 @@ class InterfazConsola:
         print()
         print("--- Buscar Materia ---")
 
-        termino = input("Ingrese un término de búsqueda:").strip()
+        termino = input("Ingrese un término de búsqueda: ").strip()
         if not termino:
             print("[ERROR] El término de búsqueda es obligatorio.")
             return
         
-        materias = MateriaManager.buscar_materia(termino)
+        materias = MateriaManager.buscar_materias(termino)
 
         if not materias:
             print("No hay materias que coincidan con el término de búsqueda.")
             return
 
         print()
-        print("--- Resultad para {termino} ---")
+        print(f"--- Resultado para {termino} ---")
         print("ID | Nombre                          | Sigla")
         print("-"*80)
         for materia in materias:
@@ -195,7 +195,7 @@ class InterfazConsola:
         self.listar_materias()
 
         try:
-            materia_id = int(input("\nID de la materia a actualizar:"))
+            materia_id = int(input("\nID de la materia a actualizar: "))
             materia = MateriaManager.obtener_materia(materia_id)
             if not materia:
                 print("[ERROR] La materia no existe con ese ID.")
@@ -205,8 +205,8 @@ class InterfazConsola:
             print(f"Actualizando la materia: {materia.sigla} -- {materia.materia}")
             print("Deje en blanco para mantener el valor actual.")
 
-            nombre = input("Nombre ({materia.materia}) : ").strip()
-            sigla = input("Sigla ({materia.sigla}): ").strip()
+            nombre = input(f"Nombre ({materia.materia}): ").strip()
+            sigla = input(f"Sigla ({materia.sigla}): ").strip()
 
             campos = {}
             if nombre:
@@ -232,7 +232,7 @@ class InterfazConsola:
         self.listar_materias()
 
         try:
-            materia_id = int(input("\nID de la materia a eliminar:"))
+            materia_id = int(input("\nID de la materia a eliminar: "))
             materia = MateriaManager.obtener_materia(materia_id)
             if not materia:
                 print("[ERROR] La materia no existe con ese ID.")
@@ -253,14 +253,15 @@ class InterfazConsola:
             
             forzar = False
             if stats['paralelos'] > 0 or stats['laboratorios'] > 0:
-                forzar_input = input("Eliminar con todas sus dependencias? (s/N)").strip().lower()
+                forzar_input = input("Eliminar con todas sus dependencias? (s/N): ").strip().lower()
                 forzar = forzar_input == 's'
-                resultado = MateriaManager.eliminar_materia(materia_id, forzar)
+                
+            resultado = MateriaManager.eliminar_materia(materia_id, forzar)
 
-                if resultado['success']:
-                    print(f"[OK] {resultado['mensaje']}")
-                else:
-                    print(f"[ERROR] {resultado['mensaje']}")
+            if resultado['success']:
+                print(f"[OK] {resultado['mensaje']}")
+            else:
+                print(f"[ERROR] {resultado['mensaje']}")
         
         except ValueError:
             print("[ERROR] ID no válido")
@@ -290,9 +291,9 @@ class InterfazConsola:
     def menu_paralelos(self):
         """ Menu para la gestión de paralelos """
         print()
-        print("-"*40)
+        print("="*40)
         print("                GESTIÓN DE PARALELOS")
-        print("-"*40)
+        print("="*40)
         print("1. Crear paralelo")
         print("2. Listar paralelos por Materia")
         print("3. Actualizar paralelo")
@@ -320,7 +321,7 @@ class InterfazConsola:
     def crear_paralelo(self):
         """ Crea un nuevo paralelo """
         print()
-        print("--- Crea un Nuevo Paralelo ---")
+        print("--- Crear un Nuevo Paralelo ---")
 
         materias = MateriaManager.listar_materias()
 
@@ -334,21 +335,21 @@ class InterfazConsola:
             print(f"{materia.id:2d} | {materia.sigla:10s} | {materia.materia:20s}")
 
         try:
-            materia_id = int(input("\nID de la materia:"))
+            materia_id = int(input("\nID de la materia: "))
 
-            paralelo_nombre = input("Nombre del Paralelo (A, B, C, etc.):").strip()
+            paralelo_nombre = input("Nombre del Paralelo (A, B, C, etc.): ").strip()
             if not paralelo_nombre:
                 print("[ERROR] El nombre del paralelo es obligatorio.")
                 return
 
-            nombre_docente = input("Nombre del Docente:").strip().upper()
+            nombre_docente = input("Nombre del Docente: ").strip().upper()
             if not nombre_docente:
                 print("[ERROR] El nombre del docente es obligatorio.")
                 return
             
             resultado = ParaleloManager.crear_paralelo(materia_id, paralelo_nombre, nombre_docente)
             if resultado:
-                print("[OK] Paralelo {paralelo_nombre}-{nombre_docente} creado exitosamente.")
+                print(f"[OK] Paralelo {paralelo_nombre}-{nombre_docente} creado exitosamente.")
             else:
                 print("[ERROR] No se pudo crear el paralelo.")
         except ValueError:
@@ -397,8 +398,8 @@ class InterfazConsola:
         self.listar_paralelos_por_materia()
 
         try:
-            paralelo_id = int(input("\nID del paralelo a actualizar:"))
-            paralelo  = ParaleloManager.obtener_paralelo(paralelo_id)
+            paralelo_id = int(input("\nID del paralelo a actualizar: "))
+            paralelo = ParaleloManager.obtener_paralelo(paralelo_id)
             if not paralelo:
                 print("[ERROR] No existe paralelo con ese ID.")
                 return
@@ -412,7 +413,7 @@ class InterfazConsola:
 
             campos = {} 
             if nuevo_nombre:
-                campos["nombre"] = nuevo_nombre
+                campos["paralelo"] = nuevo_nombre
             
             if nuevo_docente:
                 campos["docente_teoria"] = nuevo_docente
@@ -439,7 +440,7 @@ class InterfazConsola:
         self.listar_paralelos_por_materia()
 
         try:
-            paralelo_id = int(input("\nID del paralelo a eliminar:"))
+            paralelo_id = int(input("\nID del paralelo a eliminar: "))
             paralelo = ParaleloManager.obtener_paralelo(paralelo_id)
             if not paralelo:
                 print("[ERROR] No existe el paralelo con este ID")
@@ -457,7 +458,7 @@ class InterfazConsola:
             # Preguntas si forzar eliminación
             forzar = False
             if paralelo.contar_estudiantes() > 0:
-                forzar_input = input("Eliminar con todos los estudiantes inscritos? (s/N)").strip().lower()
+                forzar_input = input("Eliminar con todos los estudiantes inscritos? (s/N): ").strip().lower()
                 forzar = forzar_input == 's'
             
             resultado = ParaleloManager.eliminar_paralelo(paralelo_id, forzar)
@@ -470,7 +471,7 @@ class InterfazConsola:
         except ValueError:
             print("[ERROR] ID de paralelo no válido")
         
-    def estadisticas_paralelo(self):
+    def estadisticas_paralelos(self):
         """ Muestra estadísticas de un paralelo específico """
         print("")
         print("--- Estadísticas de Paralelo ---")
@@ -505,9 +506,9 @@ class InterfazConsola:
         """ Menú completo de gestión de estudiantes """
         while True:
             print("")
-            print("-"*40)
+            print("="*40)
             print("     GESTIÓN DE ESTUDIANTES")
-            print("-"*40)
+            print("="*40)
             print("1. Registrar Estudiante")
             print("2. Listar Estudiantes por Paralelo")
             print("3. Buscar estudiante por CI")
@@ -549,7 +550,7 @@ class InterfazConsola:
             return
         
         # Mostrar estructura de materias y paralelos
-        print("\nEstrucutara de Materias:")
+        print("\nEstructura de Materias:")
         for materia in materias:
             paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
             print(f"{materia.sigla} | {materia.materia}")
@@ -557,8 +558,8 @@ class InterfazConsola:
                 print(f"ID: {paralelo.id} - Paralelo: {paralelo.paralelo} - Docente: {paralelo.docente_teoria} - Estudiantes: {paralelo.contar_estudiantes()}")
         
         try:
-            paralelo_id = int(input("\nID del paralelo:"))
-            nombre = input("Nombre del estudiante:").strip().upper()
+            paralelo_id = int(input("\nID del paralelo: "))
+            nombre = input("Nombre del estudiante: ").strip().upper()
 
             if not nombre:
                 print("[ERROR] El nombre del estudiante es obligatorio.")
@@ -591,14 +592,14 @@ class InterfazConsola:
             print("[ERROR] No hay materias registradas.")
             return
         
-        print("\nParalelo Disponibles:")
+        print("\nParalelos Disponibles:")
         for materia in materias:
             paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
             for paralelo in paralelos:
                 print(f"{paralelo.id} - {materia.sigla} Paralelo {paralelo.paralelo} - Docente: {paralelo.docente_teoria} ({paralelo.contar_estudiantes()})")
             
         try:
-            paralelo_id = int(input("\nID del paralelo:"))
+            paralelo_id = int(input("\nID del paralelo: "))
 
             print("\nOrdenar por:")
             print("1. Nombre (default)")
@@ -627,17 +628,17 @@ class InterfazConsola:
         except ValueError:
             print("[ERROR] ID de paralelo no válido")
     
-    def buscar_estudiante_por_ci(self):
-        """ Busca un estudiatne por CI """
+    def buscar_estudiante(self):
+        """ Busca un estudiante por CI """
         print("\n--- Buscar Estudiante por CI ---")
 
-        ci = input("Ingrese CI del estudiante:").strip()
+        ci = input("Ingrese CI del estudiante: ").strip()
 
         if not ci:
             print("[ERROR] El CI es obligatorio.")
             return
         
-        estudiante = EstudianteManager.buscar_estudiante_por_ci(ci)
+        estudiante = EstudianteManager.buscar_por_ci(ci)
 
         if not estudiante:
             print(f"No se encontró estudiante con CI {ci}.")
@@ -663,7 +664,7 @@ class InterfazConsola:
         """ Actualiza información de un estudiante """
         print("\n--- Actualizar Estudiante ---")
 
-        ci = input("Ingrese CI del estudiante:").strip()
+        ci = input("Ingrese CI del estudiante: ").strip()
 
         if not ci:
             print("[ERROR] El CI es obligatorio.")
@@ -706,7 +707,7 @@ class InterfazConsola:
         """ Elimina un estudiante del sistema """
         print("\n--- Eliminar Estudiante ---")
 
-        ci = input("CI del estudiante:").strip()
+        ci = input("CI del estudiante: ").strip()
 
         if not ci:
             print("[ERROR] El CI es obligatorio.")
@@ -731,7 +732,7 @@ class InterfazConsola:
         # Preguntas si forzar eliminación
         forzar = False
         if estudiante.contar_calificaciones() > 0:
-            forzar_input = input("Eliminar con todas sus calificaciones? (s/N)").strip().lower()
+            forzar_input = input("Eliminar con todas sus calificaciones? (s/N): ").strip().lower()
             forzar = forzar_input == 's'
 
         resultado = EstudianteManager.eliminar_estudiante(estudiante.id, forzar)
@@ -752,7 +753,7 @@ class InterfazConsola:
             print("No hay materias registradas")
             return
         
-        print("\nParalelo Disponibles:")
+        print("\nParalelos Disponibles:")
         for materia in materias:
             paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
             for paralelo in paralelos:
@@ -767,7 +768,7 @@ class InterfazConsola:
                 print(f"[ERROR] {stats['error']}")
                 return
             
-            print("\n--- Estadísticas: {stat['paralelo_info']} ---")
+            print(f"\n--- Estadísticas: {stats['paralelo_info']} ---")
             print(f"Total Estudiantes: {stats['total_estudiantes']}")
             print(f"Total Grupos: {stats['total_grupos']}")
             print(f"Estudiantes sin Grupo: {stats['estudiantes_sin_grupo']}")
@@ -791,9 +792,9 @@ class InterfazConsola:
 
         while True:
             print("")
-            print("-"*40)
+            print("="*40)
             print("     GESTIÓN DE LABORATORIOS")
-            print("-"*40)
+            print("="*40)
             print("1. Crear Laboratorio")
             print("2. Listar Laboratorios por materia")
             print("3. Actualizar Laboratorio")
@@ -834,8 +835,8 @@ class InterfazConsola:
             print(f"{materia.id:2d} | {materia.sigla:10s} | {materia.materia:20s}")
 
         try:
-            materia_id = int(input("\ID de la materia:"))
-            titulo = input("Titulo del laboratorio:").strip().upper()
+            materia_id = int(input("\nID de la materia: "))
+            titulo = input("Titulo del laboratorio: ").strip().upper()
 
             if not titulo:
                 print("[ERROR] El titulo del laboratorio es obligatorio.")
@@ -844,7 +845,7 @@ class InterfazConsola:
             descripcion = input("Descripción (Opcional): ").strip() or None
 
             try:
-                puntaje_maximo = float(input("puntaje maximo (default: 100.0): ").strip() or "100")
+                puntaje_maximo = float(input("Puntaje maximo (default: 100.0): ").strip() or "100")
             except ValueError:
                 puntaje_maximo = 100.0
             
@@ -861,7 +862,7 @@ class InterfazConsola:
     def listar_laboratorios_por_materia(self):
         """ Lista Laboratorios de una materia específica """
 
-        print("\n--- Listar Laboatorios por Materia ---")
+        print("\n--- Listar Laboratorios por Materia ---")
 
         #Mostrar materias disponibles
         materias = MateriaManager.listar_materias()
@@ -875,7 +876,7 @@ class InterfazConsola:
             print(f"{materia.id:2d} | {materia.sigla:10s} | {materia.materia:20s}")
 
         try:
-            materia_id = int(input("\nID de la materia:"))
+            materia_id = int(input("\nID de la materia: "))
             laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia_id)
 
             if not laboratorios:
@@ -899,7 +900,7 @@ class InterfazConsola:
         self.listar_laboratorios_por_materia()
 
         try:
-            laboratorio_id = int(input("\nID del laboratorio a actualizar:"))
+            laboratorio_id = int(input("\nID del laboratorio a actualizar: "))
 
             laboratorio = LaboratorioManager.obtener_laboratorio(laboratorio_id)
 
@@ -911,13 +912,12 @@ class InterfazConsola:
             print("Deje en blanco para mantener el valor actual.")
 
             # Obtener nuevos valores
-
             titulo = input(f"Título ({laboratorio.titulo}): ").strip().upper()
             descripcion = input(f"Descripción ({laboratorio.descripcion or 'Sin descripción'}): ").strip()
 
             try:
                 puntaje = input(f"Puntaje máximo ({laboratorio.puntaje_maximo}): ").strip()
-                nuevo_puntaje = float(nuevo_puntaje) if nuevo_puntaje else None
+                nuevo_puntaje = float(puntaje) if puntaje else None
             except ValueError:
                 nuevo_puntaje = None
             
@@ -953,7 +953,7 @@ class InterfazConsola:
         self.listar_laboratorios_por_materia()
 
         try:
-            laboratorio_id = int(input("\nID del laboratorio a eliminar:"))
+            laboratorio_id = int(input("\nID del laboratorio a eliminar: "))
 
             laboratorio = LaboratorioManager.obtener_laboratorio(laboratorio_id)
 
@@ -964,16 +964,16 @@ class InterfazConsola:
             print(f"\nLaboratorio a eliminar: {laboratorio}")
             print(f"Calificaciones registradas: {laboratorio.contar_calificaciones()}")
 
-            confiracion = input("\n¿Está seguro de eliminar el laboratorio? (s/N): ").strip().lower()
+            confirmacion = input("\n¿Está seguro de eliminar el laboratorio? (s/N): ").strip().lower()
 
-            if confirminacion != "s":
+            if confirmacion != "s":
                 print("Operacion Cancelada")
                 return
             
             # Preguntar si forzar eliminación
             forzar = False
             if laboratorio.contar_calificaciones() > 0:
-                forzar_input = input("Eliminar con todas las calificaciones? (s/N)").strip().lower()
+                forzar_input = input("Eliminar con todas las calificaciones? (s/N): ").strip().lower()
                 forzar = forzar_input == 's'
             
             resultado = LaboratorioManager.eliminar_laboratorio(laboratorio_id, forzar)
@@ -1025,9 +1025,9 @@ class InterfazConsola:
         """ Menú completo de gestión de calificaciones """
         while True:
             print("")
-            print("-"*40)
+            print("="*40)
             print("     GESTIÓN DE CALIFICACIONES")
-            print("-"*40)
+            print("="*40)
             print("1. Registrar Calificación")
             print("2. Ver Calificaciones por estudiante")
             print("3. Ver Calificaciones por Laboratorio")
@@ -1058,7 +1058,7 @@ class InterfazConsola:
                 print("[ERROR] Opción no válida.")
 
     def registrar_calificacion(self):
-        """ Registra un nueva calificación """
+        """ Registra una nueva calificación """
         print("\n--- Registrar Calificación ---")
         # Mostrar estructura disponible
         materias = MateriaManager.listar_materias()
@@ -1085,7 +1085,7 @@ class InterfazConsola:
             print(f"Laboratorio seleccionado: {laboratorio}")
             print(f"Puntaje máximo: {laboratorio.puntaje_maximo}")
 
-            ci = input("\CI del estudiante:").strip()
+            ci = input("\nCI del estudiante: ").strip()
             estudiante = EstudianteManager.buscar_por_ci(ci)
 
             if not estudiante:
@@ -1116,16 +1116,16 @@ class InterfazConsola:
         """ Muestra todas las calificaciones de un estudiante """
         print("\n--- Ver Calificaciones por Estudiante ---")
 
-        ci = input("CI del estudiante:").strip()
+        ci = input("CI del estudiante: ").strip()
         estudiante = EstudianteManager.buscar_por_ci(ci)
         if not estudiante:
-            print("[ERROR] No existe estudiante con es CI")
+            print("[ERROR] No existe estudiante con ese CI")
             return
         
         calificaciones = CalificacionManager.obtener_calificaciones_estudiante(estudiante.id)
 
         if not calificaciones:
-            print("No hay calificaciones registradas para {estudiante.nombre}")
+            print(f"No hay calificaciones registradas para {estudiante.nombre}")
             return
         
         print(f"\n--- Calificaciones de {estudiante.nombre} ---")
@@ -1134,10 +1134,10 @@ class InterfazConsola:
         for calificacion in calificaciones:
             lab = calificacion.id_laboratorio
             estado = calificacion.estado_aprobacion()
-            fecha = calificacion.fecha_registro_strftime("%d %m %Y")
-            nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion else "None"
+            fecha = calificacion.fecha_registro.strftime("%d/%m/%Y")
+            nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion else "Sin nota"
 
-            print(f"{calificacion.id:2d} | {lab.numero:2d} | {lab.titulo:20s} | {nota_str:5.2f} | {estado:10s} | {fecha}")
+            print(f"{calificacion.id:2d} | {lab.numero:2d} | {lab.titulo:20s} | {nota_str} | {estado:10s} | {fecha}")
 
         # Mostrar promedio
         promedio = estudiante.promedio_calificaciones()
@@ -1182,7 +1182,7 @@ class InterfazConsola:
             for calificacion in calificaciones:
                 estudiante = calificacion.id_estudiante
                 estado = calificacion.estado_aprobacion()
-                fecha = calificacion.fecha_registro.strftime("%d %m %Y")
+                fecha = calificacion.fecha_registro.strftime("%d/%m/%Y")
                 nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion else "Sin nota"
                 print(f"{calificacion.id:2d} | {estudiante.ci:10s} | {estudiante.nombre:20s} | {nota_str} | {estado:10s} | {fecha}")
             
@@ -1201,13 +1201,13 @@ class InterfazConsola:
         """ Actualiza una calificación existente """
         print("\n--- Actualizar Calificación ---")
 
-        ci = input("CI del estudiante:").strip()
+        ci = input("CI del estudiante: ").strip()
         estudiante = EstudianteManager.buscar_por_ci(ci)
         if not estudiante:
             print("[ERROR] No existe estudiante con ese CI")
             return
         
-        # Mostrarcalifiaciones del estudiante
+        # Mostrar calificaciones del estudiante
         calificaciones = CalificacionManager.obtener_calificaciones_estudiante(estudiante.id)
         if not calificaciones:
             print(f"No hay calificaciones registradas para {estudiante.nombre}")
@@ -1223,7 +1223,7 @@ class InterfazConsola:
             print(f"{calificacion.id:2d} | {lab.numero:2d} | {lab.titulo:20s} | {nota_str:5.2f}")
 
         try:
-            calificacion_id = int(input("\nID de la calificación a actualizar:"))
+            calificacion_id = int(input("\nID de la calificación a actualizar: "))
 
             # Verificar que la calificacion pertenezca al estudiante
 
@@ -1268,7 +1268,7 @@ class InterfazConsola:
         """ Elimina una calificación del sistema """
         print("\n--- Eliminar Calificación ---")
 
-        ci = input("CI del estudiante:").strip()
+        ci = input("CI del estudiante: ").strip()
 
         estudiante = EstudianteManager.buscar_por_ci(ci)
         if not estudiante:
@@ -1292,7 +1292,7 @@ class InterfazConsola:
             print(f"{calificacion.id:2d} | {lab.numero:2d} | {lab.titulo:20s} | {nota_str:5.2f}")
         
         try:
-            calificacion_id = int(input("\nID de la calificación a eliminar:"))
+            calificacion_id = int(input("\nID de la calificación a eliminar: "))
 
             # Verificar que la calificacion pertenezca al estudiante
             calificacion_encontrada = None
@@ -1324,10 +1324,10 @@ class InterfazConsola:
         except ValueError:
             print("[ERROR] ID no valido")
     
-    def calificar_por_lotes(self):
+    def calificar_por_lote(self):
         """ Permite calificar varios estudiantes al mismo tiempo """
 
-        print("\n--- Calificar por Lotes ---")
+        print("\n--- Calificar por Lote ---")
 
         # Mostrar laboratorios disponibles
         materias = MateriaManager.listar_materias()
@@ -1355,11 +1355,11 @@ class InterfazConsola:
             print("Ejemplo: 123456789, 10.0")
             print("Ingrese 'fin' para finalizar.")
 
-            calificaiones_dict = {}
+            calificaciones_dict = {}
             while True:
                 entrada = input("\nIngrese CI, calificacion (fin para finalizar): ").strip()
 
-                if not entrada.lower() == "fin":
+                if entrada.lower() == "fin":
                     break
 
                 if ',' not in entrada:
@@ -1372,13 +1372,12 @@ class InterfazConsola:
                     calificacion = float(calificacion_str.strip())
 
                     # Verificar que el estudiante existe
-                    estudiante = EstudianteManager.buscar_por_ci
+                    estudiante = EstudianteManager.buscar_por_ci(ci)
                     if not estudiante:
-                        print("[ERROR] No existe estudiante con ese CI")
-                        return
+                        print(f"[ERROR] No existe estudiante con CI {ci}")
+                        continue
                     
-                    calificacion = float(calificacion_str.strip())
-
+                    calificaciones_dict[estudiante.id] = calificacion
                     print(f"[OK] Calificando {estudiante.nombre} con {calificacion}")
             
                 except ValueError:
@@ -1408,7 +1407,7 @@ class InterfazConsola:
                 print(f"[ERROR] {resultado['mensaje']}")
         
         except ValueError:
-                print(f"ID de laboratorio no válico")
+                print(f"ID de laboratorio no válido")
         
     def estadisticas_calificaciones_paralelo(self):
         """ Muestra estadísticas de calificaciones de un paralelo """
@@ -1461,9 +1460,9 @@ class InterfazConsola:
         """ Menú de reportes y exportación """
         while True:
             print("")
-            print("-"*40)
+            print("="*40)
             print("     REPORTES Y EXPORTACION")
-            print("-"*40)
+            print("="*40)
             print("1. Generar reporte PDF por paralelo")
             print("2. Matriz de calificaciones")
             print("3. Ver archivos generados")
@@ -1534,7 +1533,7 @@ class InterfazConsola:
                 print(f"ID: {paralelo.id} - {materia.sigla} Paralelo {paralelo.paralelo}")        
         
         try:
-            paralelo_id = int(input("\nID del paralelo:"))
+            paralelo_id = int(input("\nID del paralelo: "))
             paralelo = ParaleloManager.obtener_paralelo(paralelo_id)
             if not paralelo:
                 print("[ERROR] No existe paralelo con ese ID.")
@@ -1560,9 +1559,9 @@ class InterfazConsola:
             print(f"\n--- Matriz de Calificaciones: {paralelo} ---")
 
             # Encabezado
-            header = "Estudainte".ljust(20)
+            header = "Estudiante".ljust(20)
             for lab in laboratorios:
-                header = header + f"Lab {lab.numero:2d}"
+                header = header + f" L{lab.numero:2d}"
             
             header = header + " Prom"
             print(header)
@@ -1603,11 +1602,11 @@ class InterfazConsola:
             for file in files:
                 if file.endswith(".pdf"):
                     archivos_pdf.append(os.path.join(root, file))
-                elif file.endswith(".xlsx", '.xls'):
+                elif file.endswith((".xlsx", ".xls")):
                     archivos_excel.append(os.path.join(root, file))
         
         if archivos_pdf:
-            print("\Archivos PDF generados: ")
+            print("\nArchivos PDF generados: ")
             for i, archivo in enumerate(archivos_pdf, 1):
                 print(f" {i}. {os.path.basename(archivo)}")
         
@@ -1619,9 +1618,25 @@ class InterfazConsola:
         if not archivos_pdf and not archivos_excel:
             print("[ERROR] No hay archivos generados.")
     
+    def menu_estadisticas_generales(self):
+        """ Muestra estadísticas generales del sistema """
+        print("\n--- Estadísticas Generales del Sistema ---")
+        
+        try:
+            stats = MateriaManager.obtener_estadisticas_generales()
+            print(f"Total de materias: {stats['total_materias']}")
+            print(f"Total de paralelos: {stats['total_paralelos']}")
+            print(f"Total de estudiantes: {stats['total_estudiantes']}")
+            print(f"Total de laboratorios: {stats['total_laboratorios']}")
+            if 'promedio_estudiantes_por_materia' in stats:
+                print(f"Promedio de estudiantes por materia: {stats['promedio_estudiantes_por_materia']:.2f}")
+            
+        except Exception as e:
+            print(f"[ERROR] No se pudieron obtener las estadísticas: {e}")
+
     def salir(self):
         """ Cierra el Sistema """
-        print("\nGracias por usar Away (Sistema de Gestión de Laboratorio).")
+        print("\nGracias por usar Away (Sistema de Gestión de Laboratorios).")
         print("¡Hasta pronto!")
         self.running = False
 

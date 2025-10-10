@@ -450,7 +450,7 @@ class EstudiantesScreen(Screen):
 
         tabla.add_columns("ID", "CI","Nombre", "Grupo", "Promedio")
 
-        estudiantes = EstudianteManager.listar_estudiantes_por_paralelo(paralelo_id)
+        estudiantes = EstudianteManager.listar_por_paralelo(paralelo_id)
 
         for estudiante in estudiantes:
             tabla.add_row(

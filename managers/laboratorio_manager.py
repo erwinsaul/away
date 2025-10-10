@@ -116,7 +116,7 @@ class LaboratorioManager:
                         print(f"[ERROR] Ya existe un laboratorio con el número {nuevo_numero} en esta materia")
                         return False
             
-            for campo, valor in campo.items():
+            for campo, valor in campos.items():
                 if hasattr(laboratorio, campo):
                     if isinstance(valor, str):
                         setattr(laboratorio, campo, valor.strip().upper() if valor else None)
@@ -154,13 +154,13 @@ class LaboratorioManager:
             if not forzar and num_calificaciones > 0:
                 return {
                     'success': False,
-                    'message': f'No se puede eliminar {laboratorio.numero}. Tiene {num_calificaciones} calificaciones.',
+                    'mensaje': f'No se puede eliminar {laboratorio.numero}. Tiene {num_calificaciones} calificaciones.',
                     'calificaciones': num_calificaciones
                 }
             
             if forzar and num_calificaciones > 0:
                 # Eliminar calificaciones primero
-                from models.calificacion import calificaciones
+                from models.calificacion import Calificacion
 
                 eliminadas = Calificacion.delete().where(
                     Calificacion.id_laboratorio == laboratorio

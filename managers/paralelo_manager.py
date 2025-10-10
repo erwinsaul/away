@@ -32,7 +32,7 @@ class ParaleloManager:
                 paralelo=paralelo_nombre.strip().upper(),
                 docente_teoria=docente_teoria.strip().upper()
             )
-            print(f"[OK] Paralelo {paralelo.nombre} creado para {materia.sigla}")
+            print(f"[OK] Paralelo {nuevo_paralelo.paralelo} creado para {materia.sigla}")
             return nuevo_paralelo
         except Materia.DoesNotExist:
             print(f"[ERROR] No existe materia con ID {materia_id}")
@@ -102,7 +102,7 @@ class ParaleloManager:
                         (Paralelo.id_materia == paralelo.id_materia) &
                         (Paralelo.paralelo == nuevo_nombre) &
                         (Paralelo.id != paralelo_id)
-                    ).exist()
+                    ).exists()
 
                     if existe:
                         print("[ERROR] Ya existe el paralelo {nuevo_nombre} en esta materia")
@@ -143,18 +143,18 @@ class ParaleloManager:
 
             if not forzar and num_estudiantes > 0:
                 return {
-                    'succes': False,
-                    'mensaje': f'No se puede eliminar {paralelo.nombre}. Tiene {num_estudiantes} estudiantes',
-                    'estudiantes': num_estudiantes                    
+                    'success': False,
+                    'mensaje': f'No se puede eliminar {paralelo.paralelo}. Tiene {num_estudiantes} estudiantes',
+                    'estudiantes': num_estudiantes
                 }
             
             if forzar and num_estudiantes > 0:
                 # Eliminar calificaciones de estudiantes primero
-                from models.calificacion import calificaciones
+                from models.calificacion import Calificacion
 
                 calificaciones_eliminadas = 0
                 for estudiante in paralelo.estudiantes:
-                    eliminadas = calificaciones.delete().where(
+                    eliminadas = Calificacion.delete().where(
                         Calificacion.id_estudiante == estudiante
                     ).execute()
                     calificaciones_eliminadas = calificaciones_eliminadas + eliminadas
@@ -171,17 +171,17 @@ class ParaleloManager:
             paralelo.delete_instance()
 
             return {
-                'succes': True,
+                'success': True,
                 'mensaje': f'Paralelo {paralelo_info} eliminado exitosamente',
             }
         except Paralelo.DoesNotExist:
             return {
-                'succes': False,
+                'success': False,
                 'mensaje': f'No existe paralelo con ID {paralelo_id}'
             }
         except Exception as e:
             return {
-                'succes': False,
+                'success': False,
                 'mensaje': f'Error al eliminar paralelo: {e}'
             }
         

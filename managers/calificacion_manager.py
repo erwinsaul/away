@@ -109,7 +109,7 @@ class CalificacionManager:
             Calificacion: Instancia o None si no existe
         """
         try:
-            return Calificaciones.get(
+            return Calificacion.get(
                 (Calificacion.id_laboratorio == laboratorio_id) &
                 (Calificacion.id_estudiante == estudiante_id)
             )
@@ -217,14 +217,14 @@ class CalificacionManager:
                     cal_existente = CalificacionManager.obtener_calificacion_especifica(laboratorio_id, estudiante_id)
                     if cal_existente:
                         # Actualizar existente
-                        cal_existente.calificacion = nota
+                        cal_existente.calificacion = calificacion
                         cal_existente.save()
                     else:
                         # Crear nueva
                         Calificacion.create(
                             id_laboratorio=laboratorio,
                             id_estudiante=estudiante,
-                            calificacion=nota 
+                            calificacion=calificacion
                         )
                     exitosas = exitosas + 1
                 except Exception as e:

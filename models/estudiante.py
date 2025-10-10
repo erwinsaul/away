@@ -30,7 +30,7 @@ class Estudiante(BaseModel):
     def nombre_completo_con_info(self):
         """Retorna nombre con información de grupo y paralelo"""
         grupo_str = f" - {self.grupo} " if self.grupo else ""
-        return f"{sef.nombre} ({self.id_paralelo.paralelo}) {grupo_str}"
+        return f"{self.nombre} ({self.id_paralelo.paralelo}) {grupo_str}"
 
     def contar_calificaciones(self):
         """Cuenta calificaciones registradas"""
@@ -45,7 +45,7 @@ class Estudiante(BaseModel):
         if not calificaciones.exists():
             return 0.0
 
-        total = sum(cal.calificaciones for cal in calificaciones)
+        total = sum(cal.calificacion for cal in calificaciones)
         return round(total / calificaciones.count(), 2)
     
     def calificaciones_por_laboratorio(self):
@@ -63,7 +63,7 @@ class Estudiante(BaseModel):
             resultado[f"Lab {lab.numero}"] = {
                 'titulo': lab.titulo,
                 'calificacion': cal.calificacion,
-                'fecha': cal.fech_registro
+                'fecha': cal.fecha_registro
             }
         
         return resultado

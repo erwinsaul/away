@@ -288,7 +288,7 @@ class PDFExporter:
             ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), colors.black),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
         ]))
 
