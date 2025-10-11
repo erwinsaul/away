@@ -10,6 +10,8 @@ from textual.binding import Binding
 from textual.message import Message
 
 from models.database import inicializar_bd, cerrar_bd
+from models.calificacion import Calificacion
+from models.laboratorio import Laboratorio
 from managers.materia_manager import MateriaManager
 from managers.paralelo_manager import ParaleloManager
 from managers.estudiante_manager import EstudianteManager
@@ -80,7 +82,7 @@ class MenuPrincipal(Screen):
             stats_text = f"""
             Resumen del Sistema
             Materias: {stats['total_materias']:3d}
-            Paralelos : {stats['total_paralelos']:3d}
+            Paralelos: {stats['total_paralelos']:3d}
             Estudiantes: {stats['total_estudiantes']:3d}
             Laboratorios: {stats['total_laboratorios']:3d}
             """.strip()
@@ -250,7 +252,7 @@ class MateriasScreen(Screen):
         """ Callback del formulario de materia """
         if resultado:
             self.cargar_materias()
-            self.notify("Materia creada", severity="success")
+            self.notify("Materia guardada exitosamente", severity="success")
     
     def callback_eliminacion(self, confirmado):
         """ Callback de confirmación de eliminación """
@@ -319,7 +321,7 @@ class ParalelosScreen(Screen):
     
     def on_select_changed(self, event: Select.Changed):
         """ Maneja cambio de materia """
-        if event.value and event.value != None:
+        if event.value is not None:
             self.cargar_paralelos(event.value)
     
     def on_button_pressed(self, event: Button.Pressed):
@@ -388,7 +390,7 @@ class ParalelosScreen(Screen):
             select = self.query_one("#select-materia", Select)
             if select.value:
                 self.cargar_paralelos(select.value)
-            self.notify("Paralelo creado", severity="success")
+            self.notify("Paralelo guardado exitosamente", severity="success")
     
     def callback_eliminacion(self, confirmado):
         """ Callback de eliminación """
@@ -464,7 +466,7 @@ class EstudiantesScreen(Screen):
 
     def on_select_changed(self, event: Select.Changed):
         """ Maneja cambio de paralelo """
-        if event.value and event.value != None:
+        if event.value is not None:
             self.cargar_estudiantes(event.value)
     
     def on_button_pressed(self, event: Button.Pressed):
@@ -593,7 +595,7 @@ class LaboratoriosScreen(Screen):
         for laboratorio in laboratorios:
             tabla.add_row(
                 str(laboratorio.id),
-                str(laboratorio.num),
+                str(laboratorio.numero),
                 laboratorio.titulo,
                 f"{laboratorio.puntaje_maximo:.2f}",
                 str(laboratorio.contar_calificaciones()),
@@ -602,7 +604,7 @@ class LaboratoriosScreen(Screen):
         
     def on_select_changed(self, event: Select.Changed):
         """ Maneja cambio de materia """
-        if event.value and event.value != None:
+        if event.value is not None:
             self.cargar_laboratorios(event.value)
     
     def on_button_pressed(self, event: Button.Pressed):
@@ -735,7 +737,7 @@ class CalificacionesScreen(Screen):
 
         tabla.add_columns("ID", "CI", "Estudiante", "Calificacion", "Estado")
 
-        calificaciones = CalificacionManager.listar_calificaciones_por_laboratorio(laboratorio_id)
+        calificaciones = CalificacionManager.obtener_calificaciones_laboratorio(laboratorio_id)
 
         for calificacion in calificaciones:
             estudiante = calificacion.id_estudiante
@@ -753,7 +755,7 @@ class CalificacionesScreen(Screen):
 
     def on_select_changed(self, event: Select.Changed):
         """ Maneja cambio de Laboratorio """
-        if event.value and event.value != None:
+        if event.value is not None:
             self.cargar_calificaciones(event.value)
     
     def on_button_pressed(self, event: Button.Pressed):
@@ -963,7 +965,7 @@ class EstadisticasScreen(Screen):
 
             for materia in materias:
                 stats_materia = materia.estadisticas_completas()
-                contenido = contenido + f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estudiante_total']:3d} | {stats_materia['laboratorios']:3d}\n"
+                contenido = contenido + f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estudiantes']:3d} | {stats_materia['laboratorios']:3d}\n"
 
             stats_display = self.query_one("#stats-content", Static)
             stats_display.update(contenido)
@@ -1293,13 +1295,12 @@ class FormularioCalificacionScreen(ModalScreen):
         """ Inicializa el formulario """
         if self.es_edicion:
             # Cargar datos de la calificación
-            from models.calificacion import Calificacion
             try:
                 cal = Calificacion.get_by_id(self.calificacion_id)
                 self.query_one("#input-calificacion", Input).value = str(cal.calificacion) if cal.calificacion else ""
                 self.query_one("#input-observaciones", TextArea).text = cal.observaciones or ""
-            except:
-                pass
+            except Exception as e:
+                self.notify(f"Error al cargar calificación: {e}", severity="warning")
         
         if self.es_edicion:
             self.query_one("#input-calificacion", Input).focus()
@@ -1342,7 +1343,7 @@ class FormularioCalificacionScreen(ModalScreen):
                     self.notify("El ci del estudiante es obligatorio", severity="error")
                     return
                 
-                estudiante = EstudianteManager.obtener_por_ci(ci)
+                estudiante = EstudianteManager.buscar_por_ci(ci)
                 if not estudiante:
                     self.notify("No existe estudiante por ese CI", severity="error")
                     return
@@ -1399,7 +1400,7 @@ class ConfirmarEliminacionScreen(ModalScreen):
             elif self.tipo=="laboratorio":
                 resultado = LaboratorioManager.eliminar_laboratorio(self.elemento_id, forzar=True)
             elif self.tipo == "calificacion":
-                resultado = CalificacionManager.eliminar_calificacion(self.elemento_id, forzar=True)
+                resultado = CalificacionManager.eliminar_calificacion(self.elemento_id)
             else:
                 resultado = {'success': False}
             
@@ -1492,9 +1493,6 @@ class MatrizCalificacionesScreen(Screen):
             paralelo = ParaleloManager.obtener_paralelo(self.paralelo_id)
             if not paralelo:
                 return
-            
-            from models.calificacion import Calificacion 
-            from models.laboratorio import Laboratorio
 
             matriz = Calificacion.matriz_calificaciones_paralelo(paralelo)
             laboratorios = list(Laboratorio.obtener_por_materia(paralelo.id_materia))
@@ -1519,14 +1517,14 @@ class MatrizCalificacionesScreen(Screen):
                     linea = fila['estudiante'][:24].ljust(25)
 
                     for laboratorio in laboratorios:
-                        cal = fila['calificaciones'].get(f'lab_{laboratorio.numero}')
+                        nota = fila['calificaciones'].get(f'lab_{laboratorio.numero}')
 
-                        if cal is not None:
-                            linea = linea + f" {cal.calificacion:2d}"
+                        if nota is not None:
+                            linea = linea + f" {nota:5.1f}"
                         else:
-                            linea = linea + "  --"
-                    
-                    linea = linea + f"{fila['promedio']:5.2f}"
+                            linea = linea + "    --"
+
+                    linea = linea + f" {fila['promedio']:5.2f}"
                     content = content + linea + "\n"
             
             matriz_display = self.query_one("#matriz-content", Static)
@@ -1663,13 +1661,13 @@ class LaboratoriosAppTUI(App):
         self.title = "AWAY - Sistema de Gestión de Laboratorios"
         self.sub_title = "Universidad Técnica de Oruro"
     
-    def on_ready(self):
-        """ Se ejecuta cuando la aplicación está lista """
+    def on_mount(self):
+        """ Se ejecuta cuando la aplicación se monta """
         inicializar_bd()
         self.push_screen(MenuPrincipal())
         self.notify("Bienvenido a AWAY - Sistema de Gestión de Laboratorios", severity="information")
-    
-    def on_exit(self):
+
+    def on_unmount(self):
         """ Se ejecuta al cerrar la aplicación """
         cerrar_bd()
 

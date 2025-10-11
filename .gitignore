@@ -1,1 +1,16 @@
 entorno_lab/
+# Archivos de documentos
+*.pdf
+*.PDF
+*.xls
+*.xlsx
+*.XLS
+*.XLSX
+
+# Bases de datos SQLite
+*.sqlite
+*.sqlite3
+*.db
+*.DB
+*.db3
+*.DB3

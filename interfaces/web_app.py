@@ -190,7 +190,6 @@ def mostrar_dashboard():
                     'ID': materia.id,
                     'Sigla': materia.sigla,
                     'Materia': materia.materia,
-                    'Docente': materia.docente_teoria,
                     'Paralelos': materia.contar_paralelos(),
                     'Estudiantes': materia.contar_estudiantes_total(),
                     'Laboratorios': materia.contar_laboratorios()
@@ -240,7 +239,6 @@ def pagina_materias():
                         'ID': materia.id,
                         'Sigla': materia.sigla,
                         'Materia': materia.materia,
-                        'Docente': materia.docente_teoria,
                         'Paralelos': materia.contar_paralelos(),
                         'Estudiantes': materia.contar_estudiantes_total(),
                         'Laboratorios': materia.contar_laboratorios()
@@ -289,7 +287,7 @@ def pagina_materias():
                                     **Materia:** {stats['materia']}
                                     **Sigla:** {stats['sigla']}
                                     **Paralelos:** {stats['paralelos']}
-                                    **Estudiantes:** {stats['estudiantes_total']}
+                                    **Estudiantes:** {stats['estudiantes']}
                                     **Laboratorios:** {stats['laboratorios']}
                                     """)
                 else:
@@ -305,26 +303,24 @@ def pagina_materias():
         
         with st.form("form_nueva_materia"):
             col1, col2 = st.columns(2)
-            
+
             with col1:
-                materia = st.text_input("Nombre de la Materia *", 
+                materia = st.text_input("Nombre de la Materia *",
                                        placeholder="Ej: Programación I")
-                sigla = st.text_input("Sigla *", 
-                                     placeholder="Ej: SIS-111")
-            
+
             with col2:
-                docente = st.text_input("Docente de Teoría *",
-                                       placeholder="Ej: Ing. Juan Pérez")
-                
-            submitted = st.form_submit_button("Crear Materia", 
+                sigla = st.text_input("Sigla *",
+                                     placeholder="Ej: SIS-111")
+
+            submitted = st.form_submit_button("Crear Materia",
                                             type="primary",
                                             use_container_width=True)
-            
+
             if submitted:
-                if not materia or not sigla or not docente:
+                if not materia or not sigla:
                     st.error("Todos los campos son obligatorios")
                 else:
-                    resultado = MateriaManager.crear_materia(materia, sigla, docente)
+                    resultado = MateriaManager.crear_materia(materia, sigla)
                     
                     if resultado:
                         st.success(f"Materia {sigla} creada exitosamente")
@@ -346,30 +342,28 @@ def pagina_materias():
             
             if materia_seleccionada:
                 materia = opciones_materias[materia_seleccionada]
-                
+
                 with st.form("form_editar_materia"):
                     col1, col2 = st.columns(2)
-                    
+
                     with col1:
                         nuevo_nombre = st.text_input("Nombre de la Materia", value=materia.materia)
-                        nueva_sigla = st.text_input("Sigla", value=materia.sigla)
-                    
+
                     with col2:
-                        nuevo_docente = st.text_input("Docente de Teoría", value=materia.docente_teoria)
-                        
-                    submitted = st.form_submit_button("Actualizar Materia", 
+                        nueva_sigla = st.text_input("Sigla", value=materia.sigla)
+
+                    submitted = st.form_submit_button("Actualizar Materia",
                                                     type="primary",
                                                     use_container_width=True)
-                    
+
                     if submitted:
-                        if not nuevo_nombre or not nueva_sigla or not nuevo_docente:
+                        if not nuevo_nombre or not nueva_sigla:
                             st.error("Todos los campos son obligatorios")
                         else:
                             resultado = MateriaManager.actualizar_materia(
                                 materia.id,
                                 materia=nuevo_nombre,
-                                sigla=nueva_sigla,
-                                docente_teoria=nuevo_docente
+                                sigla=nueva_sigla
                             )
                             
                             if resultado:
@@ -410,7 +404,7 @@ def pagina_materias():
                         'Sigla': stats_materia['sigla'],
                         'Materia': stats_materia['materia'],
                         'Paralelos': stats_materia['paralelos'],
-                        'Estudiantes': stats_materia['estudiantes_total'],
+                        'Estudiantes': stats_materia['estudiantes'],
                         'Laboratorios': stats_materia['laboratorios']
                     })
                 
@@ -424,7 +418,7 @@ def pagina_paralelos():
     """Página de gestión de paralelos"""
     st.header("Gestión de Paralelos")
     
-    tab1, tab2, tab3 = st.tabs(["Lista de Paralelos", "Nuevo Paralelo", "Estadísticas"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Lista de Paralelos", "Nuevo Paralelo", "Editar Paralelo", "Estadísticas"])
     
     with tab1:
         st.subheader("Paralelos por Materia")
@@ -452,11 +446,12 @@ def pagina_paralelos():
                     datos.append({
                         'ID': paralelo.id,
                         'Paralelo': paralelo.paralelo,
+                        'Docente de Teoría': paralelo.docente_teoria,
                         'Estudiantes': paralelo.contar_estudiantes(),
                         'Grupos': paralelo.contar_grupos(),
                         'Promedio': f"{paralelo.promedio_general():.2f}"
                     })
-                
+
                 df = pd.DataFrame(datos)
                 st.dataframe(df, use_container_width=True, hide_index=True)
                 
@@ -514,20 +509,26 @@ def pagina_paralelos():
                     "Materia:",
                     options=list(opciones_materias.keys())
                 )
-                
-                paralelo = st.text_input("Nombre del paralelo", placeholder="A, B, C, etc.")
-                
-                submitted = st.form_submit_button("Crear Paralelo", 
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    paralelo = st.text_input("Nombre del paralelo *", placeholder="A, B, C, etc.")
+
+                with col2:
+                    docente_teoria = st.text_input("Docente de Teoría *", placeholder="Ej: Ing. Juan Pérez")
+
+                submitted = st.form_submit_button("Crear Paralelo",
                                                 type="primary",
                                                 use_container_width=True)
-                
+
                 if submitted:
-                    if not paralelo:
-                        st.error("El nombre del paralelo es obligatorio")
+                    if not paralelo or not docente_teoria:
+                        st.error("Todos los campos son obligatorios")
                     else:
                         materia_id = opciones_materias[materia_seleccionada]
-                        resultado = ParaleloManager.crear_paralelo(materia_id, paralelo)
-                        
+                        resultado = ParaleloManager.crear_paralelo(materia_id, paralelo, docente_teoria)
+
                         if resultado:
                             st.success(f"Paralelo {paralelo} creado exitosamente")
                             st.rerun()
@@ -535,8 +536,69 @@ def pagina_paralelos():
                             st.error("No se pudo crear el paralelo")
         else:
             st.warning("No hay materias registradas. Debe crear materias primero.")
-    
+
     with tab3:
+        st.subheader("Editar Paralelo")
+
+        # Obtener todos los paralelos agrupados por materia
+        materias = MateriaManager.listar_materias()
+
+        if not materias:
+            st.warning("No hay materias registradas.")
+            return
+
+        # Crear lista de paralelos disponibles
+        paralelos_disponibles = []
+        for materia in materias:
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
+            for paralelo in paralelos:
+                paralelos_disponibles.append({
+                    'texto': f"{materia.sigla} - Paralelo {paralelo.paralelo}",
+                    'paralelo': paralelo
+                })
+
+        if paralelos_disponibles:
+            opciones_paralelos = {p['texto']: p['paralelo'] for p in paralelos_disponibles}
+            paralelo_seleccionado = st.selectbox(
+                "Seleccionar paralelo a editar:",
+                options=list(opciones_paralelos.keys())
+            )
+
+            if paralelo_seleccionado:
+                paralelo = opciones_paralelos[paralelo_seleccionado]
+
+                with st.form("form_editar_paralelo"):
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        nuevo_nombre = st.text_input("Nombre del paralelo", value=paralelo.paralelo)
+
+                    with col2:
+                        nuevo_docente = st.text_input("Docente de Teoría", value=paralelo.docente_teoria)
+
+                    submitted = st.form_submit_button("Actualizar Paralelo",
+                                                    type="primary",
+                                                    use_container_width=True)
+
+                    if submitted:
+                        if not nuevo_nombre or not nuevo_docente:
+                            st.error("Todos los campos son obligatorios")
+                        else:
+                            resultado = ParaleloManager.actualizar_paralelo(
+                                paralelo.id,
+                                paralelo=nuevo_nombre,
+                                docente_teoria=nuevo_docente
+                            )
+
+                            if resultado:
+                                st.success("Paralelo actualizado exitosamente")
+                                st.rerun()
+                            else:
+                                st.error("No se pudo actualizar el paralelo")
+        else:
+            st.info("No hay paralelos registrados para editar")
+
+    with tab4:
         st.subheader("Estadísticas de Paralelos")
         
         materias = MateriaManager.listar_materias()
@@ -1663,7 +1725,7 @@ def pagina_estadisticas():
                     'Sigla': stats_materia['sigla'],
                     'Materia': stats_materia['materia'],
                     'Paralelos': stats_materia['paralelos'],
-                    'Estudiantes': stats_materia['estudiantes_total'],
+                    'Estudiantes': stats_materia['estudiantes'],
                     'Laboratorios': stats_materia['laboratorios']
                 })
             

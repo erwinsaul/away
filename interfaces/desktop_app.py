@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 
 from models.database import inicializar_bd, cerrar_bd
+from models.paralelo import Paralelo
 from managers.materia_manager import MateriaManager
 from managers.paralelo_manager import ParaleloManager
 from managers.estudiante_manager import EstudianteManager
@@ -189,25 +190,23 @@ class MainDesktopApp:
         search_entry.bind('<KeyRelease>', self.buscar_materias)
         
         # Tabla
-        columns = ('ID', 'Sigla', 'Materia', 'Docente', 'Paralelos', 'Estudiantes', 'Laboratorios')
+        columns = ('ID', 'Sigla', 'Materia', 'Paralelos', 'Estudiantes', 'Laboratorios')
         self.tree_materias = ttk.Treeview(frame, columns=columns, show='headings', height=15)
-        
+
         # Configurar columnas
         self.tree_materias.heading('ID', text='ID')
         self.tree_materias.heading('Sigla', text='Sigla')
         self.tree_materias.heading('Materia', text='Materia')
-        self.tree_materias.heading('Docente', text='Docente')
         self.tree_materias.heading('Paralelos', text='Paralelos')
         self.tree_materias.heading('Estudiantes', text='Estudiantes')
         self.tree_materias.heading('Laboratorios', text='Laboratorios')
-        
+
         self.tree_materias.column('ID', width=50)
-        self.tree_materias.column('Sigla', width=80)
-        self.tree_materias.column('Materia', width=200)
-        self.tree_materias.column('Docente', width=150)
-        self.tree_materias.column('Paralelos', width=80)
-        self.tree_materias.column('Estudiantes', width=100)
-        self.tree_materias.column('Laboratorios', width=100)
+        self.tree_materias.column('Sigla', width=100)
+        self.tree_materias.column('Materia', width=250)
+        self.tree_materias.column('Paralelos', width=100)
+        self.tree_materias.column('Estudiantes', width=120)
+        self.tree_materias.column('Laboratorios', width=120)
         
         # Scrollbars
         scrollbar_v = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree_materias.yview)
@@ -540,7 +539,6 @@ class MainDesktopApp:
                     materia.id,
                     materia.sigla,
                     materia.materia,
-                    materia.docente_teoria,
                     materia.contar_paralelos(),
                     materia.contar_estudiantes_total(),
                     materia.contar_laboratorios()
@@ -623,7 +621,6 @@ class MainDesktopApp:
                     materia.id,
                     materia.sigla,
                     materia.materia,
-                    materia.docente_teoria,
                     materia.contar_paralelos(),
                     materia.contar_estudiantes_total(),
                     materia.contar_laboratorios()
@@ -667,7 +664,7 @@ class MainDesktopApp:
         if seleccion and seleccion != "Seleccione una materia...":
             # Obtener ID de materia del texto seleccionado
             sigla = seleccion.split(' - ')[0]
-            materia = MateriaManager.obtener_por_sigla(sigla)
+            materia = MateriaManager.obtener_materia_por_sigla(sigla)
             if materia:
                 self.cargar_paralelos(materia.id)
     
@@ -705,7 +702,7 @@ class MainDesktopApp:
             return
         
         sigla = seleccion.split(' - ')[0]
-        materia = MateriaManager.obtener_por_sigla(sigla)
+        materia = MateriaManager.obtener_materia_por_sigla(sigla)
         if materia:
             self.abrir_formulario_paralelo(materia.id)
     
@@ -749,7 +746,7 @@ class MainDesktopApp:
                 seleccion = self.combo_paralelos_materia.get()
                 if seleccion and seleccion != "Seleccione una materia...":
                     sigla = seleccion.split(' - ')[0]
-                    materia = MateriaManager.obtener_por_sigla(sigla)
+                    materia = MateriaManager.obtener_materia_por_sigla(sigla)
                     if materia:
                         self.cargar_paralelos(materia.id)
             else:
@@ -765,7 +762,7 @@ class MainDesktopApp:
             seleccion = self.combo_paralelos_materia.get()
             if seleccion and seleccion != "Seleccione una materia...":
                 sigla = seleccion.split(' - ')[0]
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
                     self.cargar_paralelos(materia.id)
             self.cargar_combos_dependientes()
@@ -800,9 +797,9 @@ class MainDesktopApp:
             if len(parts) == 2:
                 sigla = parts[0]
                 paralelo_nombre = parts[1]
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
-                    paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
+                    paralelo = Paralelo.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                     if paralelo:
                         self.cargar_estudiantes(paralelo.id)
     
@@ -845,7 +842,7 @@ class MainDesktopApp:
         if len(parts) == 2:
             sigla = parts[0]
             paralelo_nombre = parts[1]
-            materia = MateriaManager.obtener_por_sigla(sigla)
+            materia = MateriaManager.obtener_materia_por_sigla(sigla)
             if materia:
                 paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                 if paralelo:
@@ -899,9 +896,9 @@ class MainDesktopApp:
                     if len(parts) == 2:
                         sigla = parts[0]
                         paralelo_nombre = parts[1]
-                        materia = MateriaManager.obtener_por_sigla(sigla)
+                        materia = MateriaManager.obtener_materia_por_sigla(sigla)
                         if materia:
-                            paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
+                            paralelo = Paralelo.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                             if paralelo:
                                 self.cargar_estudiantes(paralelo.id)
             else:
@@ -928,9 +925,9 @@ class MainDesktopApp:
             if len(parts) == 2:
                 sigla = parts[0]
                 paralelo_nombre = parts[1]
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
-                    paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
+                    paralelo = Paralelo.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                     if paralelo:
                         resultado = EstudianteManager.organizar_grupos_automatico(paralelo.id, estudiantes_por_grupo)
                         
@@ -951,15 +948,15 @@ class MainDesktopApp:
                 if len(parts) == 2:
                     sigla = parts[0]
                     paralelo_nombre = parts[1]
-                    materia = MateriaManager.obtener_por_sigla(sigla)
+                    materia = MateriaManager.obtener_materia_por_sigla(sigla)
                     if materia:
-                        paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
+                        paralelo = Paralelo.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                         if paralelo:
                             self.cargar_estudiantes(paralelo.id)
             return
         
         try:
-            estudiante = EstudianteManager.obtener_por_ci(ci)
+            estudiante = EstudianteManager.buscar_por_ci(ci)
             
             # Limpiar tabla
             for item in self.tree_estudiantes.get_children():
@@ -994,9 +991,9 @@ class MainDesktopApp:
                 if len(parts) == 2:
                     sigla = parts[0]
                     paralelo_nombre = parts[1]
-                    materia = MateriaManager.obtener_por_sigla(sigla)
+                    materia = MateriaManager.obtener_materia_por_sigla(sigla)
                     if materia:
-                        paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
+                        paralelo = Paralelo.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                         if paralelo:
                             self.cargar_estudiantes(paralelo.id)
     
@@ -1022,7 +1019,7 @@ class MainDesktopApp:
         seleccion = self.combo_laboratorios_materia.get()
         if seleccion and seleccion != "Seleccione una materia...":
             sigla = seleccion.split(' - ')[0]
-            materia = MateriaManager.obtener_por_sigla(sigla)
+            materia = MateriaManager.obtener_materia_por_sigla(sigla)
             if materia:
                 self.cargar_laboratorios(materia.id)
     
@@ -1061,7 +1058,7 @@ class MainDesktopApp:
             return
         
         sigla = seleccion.split(' - ')[0]
-        materia = MateriaManager.obtener_por_sigla(sigla)
+        materia = MateriaManager.obtener_materia_por_sigla(sigla)
         if materia:
             self.abrir_formulario_laboratorio(materia.id)
     
@@ -1105,7 +1102,7 @@ class MainDesktopApp:
                 seleccion = self.combo_laboratorios_materia.get()
                 if seleccion and seleccion != "Seleccione una materia...":
                     sigla = seleccion.split(' - ')[0]
-                    materia = MateriaManager.obtener_por_sigla(sigla)
+                    materia = MateriaManager.obtener_materia_por_sigla(sigla)
                     if materia:
                         self.cargar_laboratorios(materia.id)
             else:
@@ -1121,7 +1118,7 @@ class MainDesktopApp:
             seleccion = self.combo_laboratorios_materia.get()
             if seleccion and seleccion != "Seleccione una materia...":
                 sigla = seleccion.split(' - ')[0]
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
                     self.cargar_laboratorios(materia.id)
             self.cargar_combos_dependientes()
@@ -1158,7 +1155,7 @@ class MainDesktopApp:
                 lab_info = parts[1].split(": ")
                 if len(lab_info) == 2:
                     lab_numero = int(lab_info[0])
-                    materia = MateriaManager.obtener_por_sigla(sigla)
+                    materia = MateriaManager.obtener_materia_por_sigla(sigla)
                     if materia:
                         laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
                         for lab in laboratorios:
@@ -1214,7 +1211,7 @@ class MainDesktopApp:
             lab_info = parts[1].split(": ")
             if len(lab_info) == 2:
                 lab_numero = int(lab_info[0])
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
                     laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
                     for lab in laboratorios:
@@ -1246,7 +1243,7 @@ class MainDesktopApp:
                 lab_info = parts[1].split(": ")
                 if len(lab_info) == 2:
                     lab_numero = int(lab_info[0])
-                    materia = MateriaManager.obtener_por_sigla(sigla)
+                    materia = MateriaManager.obtener_materia_por_sigla(sigla)
                     if materia:
                         laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
                         for lab in laboratorios:
@@ -1284,7 +1281,7 @@ class MainDesktopApp:
                         lab_info = parts[1].split(": ")
                         if len(lab_info) == 2:
                             lab_numero = int(lab_info[0])
-                            materia = MateriaManager.obtener_por_sigla(sigla)
+                            materia = MateriaManager.obtener_materia_por_sigla(sigla)
                             if materia:
                                 laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
                                 for lab in laboratorios:
@@ -1308,7 +1305,7 @@ class MainDesktopApp:
             lab_info = parts[1].split(": ")
             if len(lab_info) == 2:
                 lab_numero = int(lab_info[0])
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
                     laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
                     for lab in laboratorios:
@@ -1331,7 +1328,7 @@ class MainDesktopApp:
                     lab_info = parts[1].split(": ")
                     if len(lab_info) == 2:
                         lab_numero = int(lab_info[0])
-                        materia = MateriaManager.obtener_por_sigla(sigla)
+                        materia = MateriaManager.obtener_materia_por_sigla(sigla)
                         if materia:
                             laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia.id)
                             for lab in laboratorios:
@@ -1392,9 +1389,8 @@ DETALLE POR MATERIA:
                 stats_materia = materia.estadisticas_completas()
                 info += f"""
 {materia.sigla} - {materia.materia}
-  Docente: {materia.docente_teoria}
   Paralelos: {stats_materia['paralelos']}
-  Estudiantes: {stats_materia['estudiantes_total']}
+  Estudiantes: {stats_materia['estudiantes']}
   Laboratorios: {stats_materia['laboratorios']}
 """
             
@@ -1419,9 +1415,9 @@ DETALLE POR MATERIA:
             if len(parts) == 2:
                 sigla = parts[0]
                 paralelo_nombre = parts[1]
-                materia = MateriaManager.obtener_por_sigla(sigla)
+                materia = MateriaManager.obtener_materia_por_sigla(sigla)
                 if materia:
-                    paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
+                    paralelo = Paralelo.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                     if paralelo:
                         self.actualizar_estado("Generando PDF...")
                         archivo = PDFExporter.generar_reporte_paralelo(paralelo.id)
@@ -1457,7 +1453,7 @@ DETALLE POR MATERIA:
         if len(parts) == 2:
             sigla = parts[0]
             paralelo_nombre = parts[1]
-            materia = MateriaManager.obtener_por_sigla(sigla)
+            materia = MateriaManager.obtener_materia_por_sigla(sigla)
             if materia:
                 paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                 if paralelo:
@@ -1475,7 +1471,7 @@ DETALLE POR MATERIA:
         if len(parts) == 2:
             sigla = parts[0]
             paralelo_nombre = parts[1]
-            materia = MateriaManager.obtener_por_sigla(sigla)
+            materia = MateriaManager.obtener_materia_por_sigla(sigla)
             if materia:
                 paralelo = ParaleloManager.obtener_por_materia_paralelo(materia.id, paralelo_nombre)
                 if paralelo:
@@ -1618,12 +1614,7 @@ class FormularioMateriaDialog:
         ttk.Label(form_frame, text="Sigla:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.entry_sigla = ttk.Entry(form_frame, width=50)
         self.entry_sigla.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
-        
-        # Docente
-        ttk.Label(form_frame, text="Docente de teoría:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.entry_docente = ttk.Entry(form_frame, width=50)
-        self.entry_docente.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
-        
+
         form_frame.grid_columnconfigure(1, weight=1)
         
         # Botones
@@ -1637,8 +1628,7 @@ class FormularioMateriaDialog:
         if self.materia:
             self.entry_materia.insert(0, self.materia.materia)
             self.entry_sigla.insert(0, self.materia.sigla)
-            self.entry_docente.insert(0, self.materia.docente_teoria)
-        
+
         # Focus inicial
         self.entry_materia.focus()
     
@@ -1646,22 +1636,20 @@ class FormularioMateriaDialog:
         """Guarda la materia"""
         materia = self.entry_materia.get().strip()
         sigla = self.entry_sigla.get().strip()
-        docente = self.entry_docente.get().strip()
-        
-        if not materia or not sigla or not docente:
+
+        if not materia or not sigla:
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
-        
+
         try:
             if self.materia:  # Edición
                 resultado = MateriaManager.actualizar_materia(
                     self.materia.id,
                     materia=materia,
-                    sigla=sigla,
-                    docente_teoria=docente
+                    sigla=sigla
                 )
             else:  # Creación
-                resultado = MateriaManager.crear_materia(materia, sigla, docente)
+                resultado = MateriaManager.crear_materia(materia, sigla)
             
             if resultado:
                 messagebox.showinfo("Éxito", "Materia guardada exitosamente")
@@ -1731,37 +1719,43 @@ class FormularioParaleloDialog:
         ttk.Label(form_frame, text="Paralelo:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.entry_paralelo = ttk.Entry(form_frame, width=20)
         self.entry_paralelo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
-        
+
         ttk.Label(form_frame, text="Ejemplos: A, B, C, 1, 2, etc.").grid(row=1, column=1, sticky=tk.W, pady=5)
-        
+
+        ttk.Label(form_frame, text="Docente de Teoría:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.entry_docente = ttk.Entry(form_frame, width=50)
+        self.entry_docente.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+
         form_frame.grid_columnconfigure(1, weight=1)
-        
+
         # Botones
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(pady=30)
-        
+
         ttk.Button(btn_frame, text="Guardar", command=self.guardar).pack(side=tk.LEFT, padx=10)
         ttk.Button(btn_frame, text="Cancelar", command=self.cancelar).pack(side=tk.LEFT, padx=10)
-        
+
         # Cargar datos si es edición
         if self.paralelo:
             self.entry_paralelo.insert(0, self.paralelo.paralelo)
-        
+            self.entry_docente.insert(0, self.paralelo.docente_teoria)
+
         self.entry_paralelo.focus()
     
     def guardar(self):
         """Guarda el paralelo"""
         paralelo = self.entry_paralelo.get().strip()
-        
-        if not paralelo:
-            messagebox.showerror("Error", "El nombre del paralelo es obligatorio")
+        docente = self.entry_docente.get().strip()
+
+        if not paralelo or not docente:
+            messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
-        
+
         try:
             if self.paralelo:  # Edición
-                resultado = ParaleloManager.actualizar_paralelo(self.paralelo.id, paralelo=paralelo)
+                resultado = ParaleloManager.actualizar_paralelo(self.paralelo.id, paralelo=paralelo, docente_teoria=docente)
             else:  # Creación
-                resultado = ParaleloManager.crear_paralelo(self.materia_id, paralelo)
+                resultado = ParaleloManager.crear_paralelo(self.materia_id, paralelo, docente)
             
             if resultado:
                 messagebox.showinfo("Éxito", "Paralelo guardado exitosamente")
@@ -2168,8 +2162,8 @@ class FormularioCalificacionDialog:
                 if not ci:
                     messagebox.showerror("Error", "El CI del estudiante es obligatorio")
                     return
-                
-                estudiante = EstudianteManager.obtener_por_ci(ci)
+
+                estudiante = EstudianteManager.buscar_por_ci(ci)
                 if not estudiante:
                     messagebox.showerror("Error", "No existe estudiante con ese CI")
                     return
@@ -2294,7 +2288,7 @@ class CalificacionLotesDialog:
                 calificacion = float(calificacion_str.strip())
                 
                 # Verificar estudiante
-                estudiante = EstudianteManager.obtener_por_ci(ci)
+                estudiante = EstudianteManager.buscar_por_ci(ci)
                 if not estudiante:
                     errores.append(f"Línea {i}: No existe estudiante con CI {ci}")
                     continue
@@ -2571,7 +2565,7 @@ Sigla      | Materia                  | Par | Est | Lab
             
             for materia in materias:
                 stats_materia = materia.estadisticas_completas()
-                contenido += f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estudiantes_total']:3d} | {stats_materia['laboratorios']:3d}\n"
+                contenido += f"{stats_materia['sigla']:10s} | {materia.materia[:23]:23s} | {stats_materia['paralelos']:3d} | {stats_materia['estudiantes']:3d} | {stats_materia['laboratorios']:3d}\n"
             
             contenido += f"\n\nReporte generado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
             
@@ -2661,7 +2655,7 @@ INFORMACIÓN GENERAL:
   Materia: {paralelo.id_materia.materia}
   Sigla: {paralelo.id_materia.sigla}
   Paralelo: {paralelo.paralelo}
-  Docente: {paralelo.id_materia.docente_teoria}
+  Docente: {paralelo.docente_teoria}
 
 ESTUDIANTES:
   Total estudiantes:      {stats_estudiantes['total_estudiantes']}
