@@ -1,11 +1,11 @@
 entorno_lab/
-# 1. Archivos generados de Python
+# Archivos generados de Python
 __pycache__/
 *.pyc
 *.pyd
 *.pyo
 
-# 2. Archivos de documentos binarios
+# Archivos de documentos binarios
 *.pdf
 *.PDF
 *.xls
@@ -13,7 +13,7 @@ __pycache__/
 *.XLS
 *.XLSX
 
-# 3. Bases de datos SQLite
+# Bases de datos SQLite
 *.sqlite
 *.sqlite3
 *.db
