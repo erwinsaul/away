@@ -1,3 +1,4 @@
+entorno_lab/
 # 1. Archivos generados de Python
 __pycache__/
 *.pyc
