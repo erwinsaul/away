@@ -1878,14 +1878,22 @@ class FormularioEstudianteDialog:
                 resultado = EstudianteManager.registrar_estudiante(
                     nombre, ci, self.paralelo_id, grupo or None
                 )
-            
-            if resultado:
-                messagebox.showinfo("Éxito", "Estudiante guardado exitosamente")
+
+            # Manejar resultado del registro (nuevo formato dict)
+            if self.estudiante:  # Para edición
+                exito = resultado
+            else:  # Para creación (nuevo formato)
+                exito = resultado.get('success') if isinstance(resultado, dict) else resultado
+
+            if exito:
+                mensaje = resultado.get('mensaje', "Estudiante guardado exitosamente") if isinstance(resultado, dict) else "Estudiante guardado exitosamente"
+                messagebox.showinfo("Éxito", mensaje)
                 self.dialog.destroy()
                 if self.callback:
                     self.callback(True)
             else:
-                messagebox.showerror("Error", "No se pudo guardar el estudiante")
+                mensaje_error = resultado.get('mensaje', "No se pudo guardar el estudiante") if isinstance(resultado, dict) else "No se pudo guardar el estudiante"
+                messagebox.showerror("Error", mensaje_error)
                 
         except Exception as e:
             messagebox.showerror("Error", f"Error inesperado: {e}")

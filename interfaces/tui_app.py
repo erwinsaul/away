@@ -1171,11 +1171,18 @@ class FormularioEstudianteScreen(ModalScreen):
                 )
             else:
                 resultado = EstudianteManager.registrar_estudiante(nombre, ci, self.paralelo_id, grupo or None)
-            
-            if resultado:
+
+            # Manejar resultado (actualizar devuelve bool, registrar devuelve dict)
+            if self.estudiante:  # Edición
+                exito = resultado
+            else:  # Creación
+                exito = resultado.get('success') if isinstance(resultado, dict) else resultado
+
+            if exito:
                 self.dismiss(True)
             else:
-                self.notify("Error al guardar el estudiante", severity="error")
+                mensaje = resultado.get('mensaje', "Error al guardar el estudiante") if isinstance(resultado, dict) else "Error al guardar el estudiante"
+                self.notify(mensaje, severity="error")
 
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")

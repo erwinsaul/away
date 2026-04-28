@@ -26,7 +26,7 @@ def mostrar_menu_interfaces():
     print("-"*60)
 
 
-def ejecutar_constal():
+def ejecutar_consola():
     """ Ejecuta la interfaz de consola """
     try:
         from interfaces.consola import main as consola_main
@@ -87,7 +87,7 @@ def main():
 
             if opcion == "1":
                 print("\nIniciando interfaz de consola...")
-                ejecutar_constal()
+                ejecutar_consola()
             elif opcion == "2":
                 print("\nIniciando interfaz TUI...")
                 ejecutar_tui()

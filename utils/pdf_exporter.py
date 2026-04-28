@@ -3,11 +3,11 @@ Sistema de exportación a PDF usando ReportLab.
 Generar reportes con formato
 """
 
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
 from datetime import datetime
 import os
 from models.materia import Materia
@@ -307,13 +307,233 @@ class PDFExporter:
         pie = Paragraph(pie_texto, styles["Normal"])
         contenido.append(pie)
 
+    @staticmethod
+    def generar_reporte_simple(paralelo_id, ruta_archivo=None):
+        """
+        Genera un reporte simplificado de un paralelo para presentación/impresión.
+        Incluye solo el nombre y promedio de estudiantes.
 
-        
-        
-    
+        Args:
+            paralelo_id (int): ID del paralelo
+            ruta_archivo (str): Ruta donde guardar el archivo (Opcional)
+
+        Returns:
+            str: Ruta del archivo generado o None si hay error
+        """
+        try:
+            # Obtener datos
+            paralelo = Paralelo.get_by_id(paralelo_id)
+            materia = paralelo.id_materia
+
+            # Genera nombre de archivo si no se proporciona
+            if not ruta_archivo:
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                nombre_archivo = f"reporte_simple_{materia.sigla}_{paralelo.paralelo}_{timestamp}.pdf"
+                ruta_archivo = os.path.join("exports", "pdfs", nombre_archivo)
+
+            # Crear directorio si no existe
+            os.makedirs(os.path.dirname(ruta_archivo), exist_ok=True)
+
+            # Crear Documento
+            doc = SimpleDocTemplate(
+                ruta_archivo,
+                pagesize=letter,
+                rightMargin=2*cm,
+                leftMargin=2*cm,
+                topMargin=2*cm,
+                bottomMargin=2*cm
+            )
+
+            # Construir contenido
+            contenido = []
+            styles = getSampleStyleSheet()
+
+            # Agregar elementos del reporte simple
+            PDFExporter._agregar_encabezado_simple(contenido, materia, paralelo, styles)
+            PDFExporter._agregar_tabla_estudiantes_simple(contenido, paralelo, styles)
+            PDFExporter._agregar_pie_simple(contenido, styles)
+
+            # Generar PDF
+            doc.build(contenido)
+
+            print(f"[OK] Reporte simple PDF generado: {ruta_archivo}")
+            return ruta_archivo
+        except Exception as e:
+            print(f"[ERROR] Error al generar PDF simple: {e}")
+            return None
+
+    @staticmethod
+    def _agregar_encabezado_simple(contenido, materia, paralelo, styles):
+        """
+        Agrega el encabezado simplificado del reporte.
+
+        Args:
+            contenido (list): Contenido del documento
+            materia: Objeto materia
+            paralelo: Objeto paralelo
+            styles (Styles): Estilos del documento
+        """
+        # Título principal del reporte con materia, paralelo y docente
+        titulo_reporte = Paragraph(
+            f"<font face='Helvetica' size='11'><b>NOTAS DE LABORATORIO</b><br/>"
+            f"<b>{materia.materia}</b><br/>"
+            f"Paralelo: {paralelo.paralelo}<br/>"
+            f"Docente: {paralelo.docente_teoria}</font>",
+            styles["Normal"]
+        )
+        contenido.append(titulo_reporte)
+        contenido.append(Spacer(1, 20))
+
+    @staticmethod
+    def _agregar_tabla_estudiantes_simple(contenido, paralelo, styles):
+        """
+        Agrega tabla simple de estudiantes con nombre y promedio.
+
+        Args:
+            contenido (list): Contenido del documento
+            paralelo: Objeto paralelo
+            styles (Styles): Estilos del documento
+        """
+        estudiantes = list(paralelo.estudiantes.order_by(Estudiante.nombre))
+
+        if not estudiantes:
+            no_estudiantes = Paragraph(
+                "No hay estudiantes registrados",
+                styles["Normal"]
+            )
+            contenido.append(no_estudiantes)
+            contenido.append(Spacer(1, 20))
+            return
+
+        # Crear tabla con encabezados
+        datos_tabla = [['N°', 'Nombre Completo', 'Promedio Final']]
+
+        for i, estudiante in enumerate(estudiantes, 1):
+            promedio = estudiante.promedio_calificaciones()
+            datos_tabla.append([
+                str(i),
+                estudiante.nombre,
+                f"{promedio:.2f}"
+            ])
+
+        # Configurar tabla
+        tabla_estudiantes = Table(datos_tabla, colWidths=[2*cm, 11*cm, 3.5*cm])
+        tabla_estudiantes.setStyle(TableStyle([
+            # Encabezado
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1f77b4')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,0), 11),
+            ('BOTTOMPADDING', (0,0), (-1,0), 10),
+            ('TOPPADDING', (0,0), (-1,0), 10),
+
+            # Datos
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,1), (-1,-1), 11),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+
+            # Nombres alineados a la izquierda
+            ('ALIGN', (1,1), (1,-1), 'LEFT'),
+        ]))
+
+        contenido.append(tabla_estudiantes)
+        contenido.append(Spacer(1, 40))
+
+    @staticmethod
+    def _agregar_pie_simple(contenido, styles):
+        """
+        Agrega pie del documento simple con línea para firma.
+
+        Args:
+            contenido (list): Contenido del documento
+            styles (Styles): Estilos del documento
+        """
+        contenido.append(Spacer(1, 20))
+
+        # Línea para firma centrada
+        linea = Paragraph("<para align=center>_____________________________________________</para>", styles["Normal"])
+        contenido.append(linea)
+
+    @staticmethod
+    def generar_reporte_consolidado(ruta_archivo=None):
+        """
+        Genera un reporte consolidado con todas las materias y paralelos en un solo documento.
+        Cada paralelo se presenta en una página separada con el formato del reporte simple.
+
+        Args:
+            ruta_archivo (str): Ruta donde guardar el archivo (Opcional)
+
+        Returns:
+            str: Ruta del archivo generado o None si hay error
+        """
+        try:
+            # Genera nombre de archivo si no se proporciona
+            if not ruta_archivo:
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                nombre_archivo = f"reporte_consolidado_{timestamp}.pdf"
+                ruta_archivo = os.path.join("exports", "pdfs", nombre_archivo)
+
+            # Crear directorio si no existe
+            os.makedirs(os.path.dirname(ruta_archivo), exist_ok=True)
+
+            # Crear Documento
+            doc = SimpleDocTemplate(
+                ruta_archivo,
+                pagesize=letter,
+                rightMargin=2*cm,
+                leftMargin=2*cm,
+                topMargin=2*cm,
+                bottomMargin=2*cm
+            )
+
+            # Construir contenido
+            contenido = []
+            styles = getSampleStyleSheet()
+
+            # Obtener todas las materias
+            materias = Materia.select().order_by(Materia.sigla)
+
+            total_paralelos = 0
+            for materia in materias:
+                # Obtener todos los paralelos de la materia
+                paralelos = materia.paralelos.order_by(Paralelo.paralelo)
+
+                for paralelo in paralelos:
+                    total_paralelos += 1
+
+                    # Agregar elementos del reporte simple para cada paralelo
+                    PDFExporter._agregar_encabezado_simple(contenido, materia, paralelo, styles)
+                    PDFExporter._agregar_tabla_estudiantes_simple(contenido, paralelo, styles)
+                    PDFExporter._agregar_pie_simple(contenido, styles)
+
+                    # Agregar salto de página entre paralelos (excepto en el último)
+                    contenido.append(PageBreak())
+
+            # Si no hay paralelos, agregar mensaje
+            if total_paralelos == 0:
+                no_datos = Paragraph(
+                    "No hay materias ni paralelos registrados en el sistema.",
+                    styles["Normal"]
+                )
+                contenido.append(no_datos)
+
+            # Generar PDF
+            doc.build(contenido)
+
+            print(f"[OK] Reporte consolidado PDF generado: {ruta_archivo}")
+            print(f"[INFO] Total de paralelos incluidos: {total_paralelos}")
+            return ruta_archivo
+        except Exception as e:
+            print(f"[ERROR] Error al generar PDF consolidado: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
 
 
 
 
-    

@@ -37,41 +37,67 @@ class Laboratorio(BaseModel):
     def promedio_calificaciones(self):
         """Calcula el promedio de todas las calificaciones"""
         from .calificacion import Calificacion
-        calificaciones = self.calificaciones.where(Calificacion.calificacion.is_null(False))
+        from .estudiante import Estudiante
+        from .paralelo import Paralelo
 
-        if not calificaciones.exists():
+        # Obtener total de estudiantes en la materia de este laboratorio
+        materia = self.id_materia
+        total_estudiantes = Estudiante.select().join(
+            Paralelo
+        ).where(
+            Paralelo.id_materia == materia
+        ).count()
+        
+        if total_estudiantes == 0:
             return 0.0
         
-        total = sum(cal.calificacion for cal in calificaciones)
-        return round(total / calificaciones.count(), 2)
+        # Obtener solo las calificaciones que tienen valor
+        calificaciones = self.calificaciones.where(Calificacion.calificacion.is_null(False))
+        total_calificaciones = sum(cal.calificacion for cal in calificaciones)
+        
+        # Dividir por el total de estudiantes posibles, no solo los que tienen nota
+        return round(total_calificaciones / total_estudiantes, 2)
     
     def estadisticas_detalladas(self):
         """Retorna estadísticas completas del laboratorio"""
         from .calificacion import Calificacion
+        from .estudiante import Estudiante
+        from .paralelo import Paralelo
 
-        calificacion = self.calificaciones.where(Calificacion.calificacion.is_null(False))
-
-        if not calificacion.exists():
+        # Obtener total de estudiantes en la materia de este laboratorio
+        materia = self.id_materia
+        total_estudiantes = Estudiante.select().join(
+            Paralelo
+        ).where(
+            Paralelo.id_materia == materia
+        ).count()
+        
+        if total_estudiantes == 0:
             return {
-                'total_calificaciones': 0,
-                'promedio': 0.0,
-                'nota_maxima': self.puntaje_maximo,
-                'nota_minima': 0.0,
-                'aprobados': 0,
-                'reprobados': 0
+                "total_calificaciones": 0,
+                "promedio": 0.0,
+                "nota_maxima": self.puntaje_maximo,
+                "nota_minima": 0.0,
+                "aprobados": 0,
+                "reprobados": 0
             }
         
-        notas = [cal.calificacion for cal in calificacion]
-        promedio = sum(notas) / len(notas)
+        # Obtener calificaciones con valor
+        calificaciones_con_valor = self.calificaciones.where(Calificacion.calificacion.is_null(False))
+        notas = [cal.calificacion for cal in calificaciones_con_valor]
+        total_calificaciones = sum(notas)
+        
+        # Calcular promedio considerando todos los estudiantes posibles
+        promedio = total_calificaciones / total_estudiantes
         aprobados = len([nota for nota in notas if nota >= 51])
-
+        
         return{
-            'total_calificaciones': len(notas),
-            'promedio': promedio,
-            'nota_maxima': max(notas),
-            'nota_minima': min(notas),
-            'aprobados': aprobados,
-            'reprobados': len(notas) - aprobados
+            "total_calificaciones": len(notas),
+            "promedio": promedio,
+            "nota_maxima": max(notas) if notas else 0.0,
+            "nota_minima": min(notas) if notas else 0.0,
+            "aprobados": aprobados,
+            "reprobados": len(notas) - aprobados
         }
 
     @classmethod

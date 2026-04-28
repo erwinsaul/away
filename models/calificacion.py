@@ -66,34 +66,45 @@ class Calificacion(BaseModel):
     @classmethod
     def estadisticas_paralelo(cls, paralelo):
         """Calcula estadisticas generales de un paralelo"""
+        from .estudiante import Estudiante
+        from .laboratorio import Laboratorio
+        
         calificaciones = cls.obtener_por_paralelo(paralelo)
-        calificaciones_con_nota = calificaciones.where(cls.calificacion.is_null(False))
-
-        if not calificaciones_con_nota.exists():
+        # Contar estudiantes en el paralelo y laboratorios en la materia
+        total_estudiantes = paralelo.contar_estudiantes()
+        total_laboratorios = Laboratorio.select().where(Laboratorio.id_materia == paralelo.id_materia).count()
+        
+        if total_estudiantes == 0 or total_laboratorios == 0:
             return {
-                'total_calificaciones': 0,
-                'promedio_general': 0.0,
-                'aprobados': 0,
-                'reprobados': 0,
-                'sin_calificar': calificaciones.where(cls.calificacion.is_null(True)).count()
+                "total_calificaciones": 0,
+                "promedio_general": 0.0,
+                "aprobados": 0,
+                "reprobados": 0,
+                "sin_calificar": calificaciones.where(cls.calificacion.is_null(True)).count()
             }
-
+        
+        # Calcular promedio considerando total de posibles calificaciones (estudiantes * laboratorios)
+        calificaciones_con_nota = calificaciones.where(cls.calificacion.is_null(False))
+        total_calificaciones = sum(cal.calificacion for cal in calificaciones_con_nota)
+        total_posibles = total_estudiantes * total_laboratorios
+        
+        # Calcular aprobados basados en las notas existentes
         notas = [cal.calificacion for cal in calificaciones_con_nota]
         aprobados = len([nota for nota in notas if nota >= 51])
-
+        
         return{
-            'total_calificaciones': len(notas),
-            'promedio_general': round(sum(notas) / len(notas), 2),
-            'aprobados': aprobados,
-            'reprobados': len(notas) - aprobados,
-            'sin_calificar': calificaciones.where(cls.calificacion.is_null(True)).count()
+            "total_calificaciones": len(notas),
+            "promedio_general": round(total_calificaciones / total_posibles, 2) if total_posibles > 0 else 0.0,
+            "aprobados": aprobados,
+            "reprobados": len(notas) - aprobados,
+            "sin_calificar": calificaciones.where(cls.calificacion.is_null(True)).count()
         }
 
     @classmethod
     def matriz_calificaciones_paralelo(cls, paralelo):
         """Genera una matriz de calificaciones para reportes."""
         from .laboratorio import Laboratorio
-        
+
         #Obtener estudiantes del paralelo
         estudiantes =  paralelo.estudiantes.order_by(Estudiante.nombre)
 
@@ -101,20 +112,23 @@ class Calificacion(BaseModel):
         laboratorios = (Laboratorio.select()
                         .where(Laboratorio.id_materia == paralelo.id_materia)
                         .order_by(Laboratorio.numero))
-        
+
+        # Iniciar matriz vacía
         matriz = []
+
+        # Calcular total de laboratorios para usar en cálculo de promedio
+        total_laboratorios = laboratorios.count()
 
         for estudiante in estudiantes:
             fila = {
-                'estudiante': estudiante.nombre,
-                'ci': estudiante.ci,
-                'grupo': estudiante.grupo,
-                'calificaciones': {},
-                'promedio': 0.0
+                "estudiante": estudiante.nombre,
+                "ci": estudiante.ci,
+                "grupo": estudiante.grupo,
+                "calificaciones": {},
+                "promedio": 0.0
             }
 
             total_notas = 0
-            count_notas = 0
 
             for lab in laboratorios:
                 try:
@@ -123,16 +137,16 @@ class Calificacion(BaseModel):
                         (cls.id_laboratorio == lab)
                     )
                     nota = cal.calificacion if cal.calificacion else 0
-                    fila['calificaciones'][f"lab_{lab.numero}"] = nota
+                    fila["calificaciones"][f"lab_{lab.numero}"] = nota
 
                     if cal.calificacion:
                         total_notas = total_notas + cal.calificacion
-                        count_notas = count_notas + 1
-                
+
                 except cls.DoesNotExist:
-                    fila['calificaciones'][f"lab_{lab.numero}"] = None
-            
-            fila['promedio'] = round(total_notas / count_notas, 2) if count_notas > 0 else 0.0
+                    fila["calificaciones"][f"lab_{lab.numero}"] = None
+
+            # Calcular promedio considerando todos los laboratorios posibles, no solo los calificados
+            fila["promedio"] = round(total_notas / total_laboratorios, 2) if total_laboratorios > 0 else 0.0
             matriz.append(fila)
         
         return matriz     

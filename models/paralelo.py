@@ -50,18 +50,26 @@ class Paralelo(BaseModel):
         """Retorna el promedio general de todos los estudiantes"""
         from .calificacion import Calificacion
         from .estudiante import Estudiante
-        # Obtener todas las calificaciones de este paralelo
-        calificaciones = (Calificacion
-            .select()
-            .join(Estudiante)
-            .where(Estudiante.id_paralelo == self) )
-
-        if not calificaciones.exists():
+        from .laboratorio import Laboratorio
+        # Obtener todos los laboratorios de la materia de este paralelo
+        total_laboratorios = Laboratorio.select().where(Laboratorio.id_materia == self.id_materia).count()
+        if total_laboratorios == 0:
             return 0.0
         
-        total = sum(cal.calificacion for cal in calificaciones if cal.calificacion)
-        count = len([cal for cal in calificaciones if cal.calificacion])
-        return round(total / count, 2) if count > 0 else 0.0
+        # Obtener estudiantes de este paralelo
+        estudiantes = self.estudiantes
+        total_promedios = 0.0
+        total_estudiantes = estudiantes.count()
+        
+        if total_estudiantes == 0:
+            return 0.0
+        
+        # Sumar el promedio de cada estudiante
+        for estudiante in estudiantes:
+            total_promedios += estudiante.promedio_calificaciones()
+        
+        # Dividir por el total de estudiantes
+        return round(total_promedios / total_estudiantes, 2)
 
     @classmethod
     def obtener_por_materia_paralelo(cls, materia_id, paralelo_nombre):

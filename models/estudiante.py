@@ -13,7 +13,7 @@ class Estudiante(BaseModel):
     puede estar en diferentes paralelos si cursa múltiples materias
     """
     nombre = CharField(max_length=200)
-    ci = CharField(max_length=20, unique=True)
+    ci = CharField(max_length=20)
     id_paralelo = ForeignKeyField(Paralelo, backref='estudiantes')
     grupo = CharField(max_length=100, null=True) # Grupo 1, Grupo 2, ec
     
@@ -40,13 +40,21 @@ class Estudiante(BaseModel):
     def promedio_calificaciones(self):
         """Calcula el promedio de calificaciones"""
         from .calificacion import Calificacion
-        calificaciones = self.calificaciones.where(Calificacion.calificacion.is_null(False))
+        from .laboratorio import Laboratorio
 
-        if not calificaciones.exists():
+        # Obtener todos los laboratorios de la materia del estudiante
+        materia = self.id_paralelo.id_materia
+        total_laboratorios = Laboratorio.select().where(Laboratorio.id_materia == materia).count()
+
+        if total_laboratorios == 0:
             return 0.0
 
-        total = sum(cal.calificacion for cal in calificaciones)
-        return round(total / calificaciones.count(), 2)
+        # Obtener solo las calificaciones que tienen valor
+        calificaciones = self.calificaciones.where(Calificacion.calificacion.is_null(False))
+        total_calificaciones = sum(cal.calificacion for cal in calificaciones)
+
+        # Dividir por el total de laboratorios posibles, no solo los que tienen nota
+        return round(total_calificaciones / total_laboratorios, 2)
     
     def calificaciones_por_laboratorio(self):
         """Retorna diccionario con calificaciones por laboratorio"""
@@ -70,11 +78,31 @@ class Estudiante(BaseModel):
     
     @classmethod
     def buscar_por_ci(cls, ci):
-        """Busca estudiante por cédula de identidad"""
+        """Busca un estudiante por cédula de identidad (retorna el primero si hay múltiples)"""
         try:
-            return cls.get(cls.ci == ci)
+            # Buscar en todos los estudiantes con esta CI
+            estudiantes = list(cls.select().where(cls.ci == ci))
+            if estudiantes:
+                # Si hay múltiples, retornar el primero (podríamos especificar criterios adicionales)
+                # En la mayoría de los casos, esperamos que sea solo uno
+                return estudiantes[0]
+            else:
+                return None
         except cls.DoesNotExist:
             return None
+
+    @classmethod
+    def buscar_por_ci_en_paralelo(cls, ci, paralelo):
+        """Busca un estudiante específico con CI en un paralelo específico"""
+        try:
+            return cls.get((cls.ci == ci) & (cls.id_paralelo == paralelo))
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def buscar_todos_por_ci(cls, ci):
+        """Busca todos los estudiantes con una cédula de identidad específica (múltiples paralelos)"""
+        return list(cls.select().where(cls.ci == ci))
     
     @classmethod
     def obtener_por_paralelo_grupo(cls, paralelo, grupo):

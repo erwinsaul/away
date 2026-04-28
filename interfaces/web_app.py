@@ -1,6 +1,6 @@
 """
 Aplicación web completa para el sistema de gestión de laboratorios.
-Utiliza Streamlit para crear una interfaz web moderna con todos los CRUDs.
+Utiliza Streamlit para crear una interfaz web con todos los CRUDs.
 """
 
 import streamlit as st
@@ -81,7 +81,7 @@ def mostrar_titulo_principal():
         Sistema de Gestión de Laboratorios
     </div>
     <div class="sub-header">
-        Universidad Técnica de Oruro - SIS 2420 - Actualización Tecnológica
+        Away - Gestión de Laboratorios
     </div>
     """, unsafe_allow_html=True)
 
@@ -99,12 +99,8 @@ def sidebar_navegacion():
         st.markdown("---")
         st.markdown("### Información del Sistema")
         st.markdown("""
-        **Sistema de Gestión de Laboratorios**
-        
-        - Universidad Técnica de Oruro
-        - SIS 2420 - Actualización Tecnológica  
-        - Desarrollado con Python + Streamlit
-        - Base de datos SQLite + Peewee ORM
+        **Away - Sistema de Gestión de Laboratorios**
+        - Desarrollado por: ErwinSaul
         """)
         
         st.markdown("---")
@@ -263,17 +259,36 @@ def pagina_materias():
                         col1, col2 = st.columns(2)
                         
                         with col1:
-                            if st.button("Eliminar Materia", type="primary", use_container_width=True):
-                                materia_id = opciones_materias[materia_seleccionada]
-                                
-                                if st.checkbox("Confirmar eliminación (eliminará todos los datos relacionados)"):
-                                    resultado = MateriaManager.eliminar_materia(materia_id, forzar=True)
-                                    
-                                    if resultado['success']:
-                                        st.success(resultado['mensaje'])
+                            # Manejo de estado de confirmación
+                            if 'confirmar_eliminar_materia' not in st.session_state:
+                                st.session_state.confirmar_eliminar_materia = None
+
+                            materia_id = opciones_materias[materia_seleccionada]
+
+                            if st.session_state.confirmar_eliminar_materia == materia_id:
+                                st.warning("⚠️ ¿Está seguro? Esta acción eliminará todos los datos relacionados.")
+                                col_si, col_no = st.columns(2)
+
+                                with col_si:
+                                    if st.button("✓ Sí, eliminar", type="primary", use_container_width=True, key=f"confirmar_si_{materia_id}"):
+                                        resultado = MateriaManager.eliminar_materia(materia_id, forzar=True)
+
+                                        if resultado['success']:
+                                            st.success(resultado['mensaje'])
+                                            st.session_state.confirmar_eliminar_materia = None
+                                            st.rerun()
+                                        else:
+                                            st.error(resultado['mensaje'])
+                                            st.session_state.confirmar_eliminar_materia = None
+
+                                with col_no:
+                                    if st.button("✗ Cancelar", use_container_width=True, key=f"confirmar_no_{materia_id}"):
+                                        st.session_state.confirmar_eliminar_materia = None
                                         st.rerun()
-                                    else:
-                                        st.error(resultado['mensaje'])
+                            else:
+                                if st.button("Eliminar Materia", type="primary", use_container_width=True):
+                                    st.session_state.confirmar_eliminar_materia = materia_id
+                                    st.rerun()
                         
                         with col2:
                             if st.button("Ver Detalles", use_container_width=True):
@@ -467,17 +482,36 @@ def pagina_paralelos():
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    if st.button("Eliminar Paralelo", type="primary"):
-                        paralelo_id = opciones_paralelos[paralelo_seleccionado]
-                        
-                        if st.checkbox("Confirmar eliminación del paralelo"):
-                            resultado = ParaleloManager.eliminar_paralelo(paralelo_id, forzar=True)
-                            
-                            if resultado['success']:
-                                st.success(resultado['mensaje'])
+                    # Manejo de estado de confirmación
+                    if 'confirmar_eliminar_paralelo' not in st.session_state:
+                        st.session_state.confirmar_eliminar_paralelo = None
+
+                    paralelo_id = opciones_paralelos[paralelo_seleccionado]
+
+                    if st.session_state.confirmar_eliminar_paralelo == paralelo_id:
+                        st.warning("⚠️ ¿Está seguro de eliminar este paralelo?")
+                        col_si, col_no = st.columns(2)
+
+                        with col_si:
+                            if st.button("✓ Sí, eliminar", type="primary", use_container_width=True, key=f"conf_par_si_{paralelo_id}"):
+                                resultado = ParaleloManager.eliminar_paralelo(paralelo_id, forzar=True)
+
+                                if resultado['success']:
+                                    st.success(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_paralelo = None
+                                    st.rerun()
+                                else:
+                                    st.error(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_paralelo = None
+
+                        with col_no:
+                            if st.button("✗ Cancelar", use_container_width=True, key=f"conf_par_no_{paralelo_id}"):
+                                st.session_state.confirmar_eliminar_paralelo = None
                                 st.rerun()
-                            else:
-                                st.error(resultado['mensaje'])
+                    else:
+                        if st.button("Eliminar Paralelo", type="primary", use_container_width=True):
+                            st.session_state.confirmar_eliminar_paralelo = paralelo_id
+                            st.rerun()
                 
                 with col2:
                     if st.button("Ver Estadísticas"):
@@ -713,27 +747,46 @@ def pagina_estudiantes():
                         st.session_state['editar_estudiante_id'] = estudiante_id
                         
                 with col3:
-                    if st.button("Eliminar Estudiante", type="primary", use_container_width=True):
-                        estudiante_id = opciones_estudiantes[estudiante_seleccionado]
-                        
-                        if st.checkbox("Confirmar eliminación del estudiante"):
-                            resultado = EstudianteManager.eliminar_estudiante(estudiante_id, forzar=True)
-                            
-                            if resultado['success']:
-                                st.success(resultado['mensaje'])
+                    # Manejo de estado de confirmación
+                    if 'confirmar_eliminar_estudiante' not in st.session_state:
+                        st.session_state.confirmar_eliminar_estudiante = None
+
+                    estudiante_id = opciones_estudiantes[estudiante_seleccionado]
+
+                    if st.session_state.confirmar_eliminar_estudiante == estudiante_id:
+                        st.warning("⚠️ ¿Está seguro de eliminar este estudiante?")
+                        col_si, col_no = st.columns(2)
+
+                        with col_si:
+                            if st.button("✓ Sí, eliminar", type="primary", use_container_width=True, key=f"conf_est_si_{estudiante_id}"):
+                                resultado = EstudianteManager.eliminar_estudiante(estudiante_id, forzar=True)
+
+                                if resultado['success']:
+                                    st.success(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_estudiante = None
+                                    st.rerun()
+                                else:
+                                    st.error(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_estudiante = None
+
+                        with col_no:
+                            if st.button("✗ Cancelar", use_container_width=True, key=f"conf_est_no_{estudiante_id}"):
+                                st.session_state.confirmar_eliminar_estudiante = None
                                 st.rerun()
-                            else:
-                                st.error(resultado['mensaje'])
+                    else:
+                        if st.button("Eliminar Estudiante", type="primary", use_container_width=True):
+                            st.session_state.confirmar_eliminar_estudiante = estudiante_id
+                            st.rerun()
             else:
                 st.info("No hay estudiantes registrados en este paralelo")
     
     with tab2:
         st.subheader("Registrar Nuevo Estudiante")
-        
+
         # Obtener paralelos
         paralelos_disponibles = []
         materias = MateriaManager.listar_materias()
-        
+
         for materia in materias:
             paralelos = ParaleloManager.listar_paralelos_por_materia(materia.id)
             for paralelo in paralelos:
@@ -741,7 +794,7 @@ def pagina_estudiantes():
                     'texto': f"{materia.sigla} - Paralelo {paralelo.paralelo}",
                     'paralelo_id': paralelo.id
                 })
-        
+
         if paralelos_disponibles:
             with st.form("form_nuevo_estudiante"):
                 opciones_paralelos = {p['texto']: p['paralelo_id'] for p in paralelos_disponibles}
@@ -749,34 +802,54 @@ def pagina_estudiantes():
                     "Paralelo:",
                     options=list(opciones_paralelos.keys())
                 )
-                
+
                 col1, col2 = st.columns(2)
-                
+
                 with col1:
                     nombre = st.text_input("Nombre completo *", placeholder="Juan Pérez")
                     ci = st.text_input("Cédula de identidad *", placeholder="12345678")
-                
+
                 with col2:
                     grupo = st.text_input("Grupo (opcional)", placeholder="Grupo 1")
-                
-                submitted = st.form_submit_button("Registrar Estudiante", 
+
+                submitted = st.form_submit_button("Registrar Estudiante",
                                                 type="primary",
                                                 use_container_width=True)
-                
+
                 if submitted:
                     if not nombre or not ci:
                         st.error("Nombre y CI son obligatorios")
                     else:
                         paralelo_id = opciones_paralelos[paralelo_seleccionado]
-                        resultado = EstudianteManager.registrar_estudiante(
-                            nombre, ci, paralelo_id, grupo or None
-                        )
-                        
-                        if resultado:
-                            st.success(f"Estudiante {nombre} registrado exitosamente")
-                            st.rerun()
+                        ci_limpio = ci.strip().upper()
+
+                        # Verificar si el CI ya existe en otros paralelos
+                        estudiantes_existentes = EstudianteManager.buscar_todos_por_ci(ci_limpio)
+
+                        # Verificar si ya está inscrito en este paralelo específico
+                        estudiante_en_paralelo = EstudianteManager.buscar_por_ci_en_paralelo(ci_limpio, paralelo_id)
+
+                        if estudiante_en_paralelo:
+                            st.error(f"El estudiante con CI {ci} ya está inscrito en este paralelo")
                         else:
-                            st.error("No se pudo registrar el estudiante")
+                            # Mostrar advertencia si ya existe en otros paralelos
+                            if estudiantes_existentes:
+                                st.warning(f"ℹ️ El CI {ci_limpio} ya está registrado en {len(estudiantes_existentes)} materia(s). Se inscribirá en una nueva materia/paralelo.")
+
+                            resultado = EstudianteManager.registrar_estudiante(
+                                nombre, ci, paralelo_id, grupo or None
+                            )
+
+                            if resultado is None:
+                                st.error("Error interno: El sistema no pudo procesar la inscripción")
+                            elif resultado['success']:
+                                if estudiantes_existentes:
+                                    st.success(f"Estudiante {nombre} inscrito exitosamente en una nueva materia")
+                                else:
+                                    st.success(resultado['mensaje'])
+                                st.rerun()
+                            else:
+                                st.error(f"No se pudo registrar el estudiante: {resultado['mensaje']}")
         else:
             st.warning("No hay paralelos registrados. Debe crear paralelos primero.")
         
@@ -872,44 +945,66 @@ def pagina_estudiantes():
     
     with tab4:
         st.subheader("Búsqueda de Estudiantes")
-        
+
         ci_busqueda = st.text_input("Buscar por CI:", placeholder="Ingrese cédula de identidad")
-        
+
         if ci_busqueda:
-            estudiante = EstudianteManager.obtener_por_ci(ci_busqueda)
-            
-            if estudiante:
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.write(f"**Nombre:** {estudiante.nombre}")
-                    st.write(f"**CI:** {estudiante.ci}")
-                    st.write(f"**Paralelo:** {estudiante.id_paralelo}")
-                    st.write(f"**Grupo:** {estudiante.grupo or 'Sin asignar'}")
-                
-                with col2:
-                    st.write(f"**Promedio:** {estudiante.promedio_calificaciones():.2f}")
-                    st.write(f"**Calificaciones:** {estudiante.contar_calificaciones()}")
-                
-                # Mostrar calificaciones
-                calificaciones = estudiante.calificaciones_por_laboratorio()
-                
-                if calificaciones:
-                    st.subheader("Calificaciones por Laboratorio")
-                    
-                    datos_cal = []
-                    for lab, datos in calificaciones.items():
-                        datos_cal.append({
-                            'Laboratorio': lab,
-                            'Título': datos['titulo'],
-                            'Calificación': f"{datos['calificacion']:.1f}",
-                            'Fecha': datos['fecha'].strftime('%d/%m/%Y') if datos['fecha'] else 'N/A'
-                        })
-                    
-                    df_cal = pd.DataFrame(datos_cal)
-                    st.dataframe(df_cal, use_container_width=True, hide_index=True)
-                else:
-                    st.info("No tiene calificaciones registradas")
+            estudiantes = EstudianteManager.buscar_todos_por_ci(ci_busqueda)
+
+            if estudiantes:
+                # Mostrar información general
+                st.success(f"Se encontraron {len(estudiantes)} inscripción(es) para el CI: {ci_busqueda}")
+
+                # Si es el mismo estudiante, mostrar nombre una sola vez
+                if estudiantes:
+                    st.write(f"**Nombre:** {estudiantes[0].nombre}")
+                    st.write(f"**CI:** {estudiantes[0].ci}")
+
+                st.divider()
+
+                # Mostrar cada inscripción (paralelo/materia)
+                for idx, estudiante in enumerate(estudiantes, 1):
+                    st.subheader(f"Inscripción {idx}: {estudiante.id_paralelo.id_materia.sigla} - Paralelo {estudiante.id_paralelo.paralelo}")
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.write(f"**Materia:** {estudiante.id_paralelo.id_materia.materia}")
+                        st.write(f"**Paralelo:** {estudiante.id_paralelo.paralelo}")
+                        st.write(f"**Docente:** {estudiante.id_paralelo.docente_teoria}")
+
+                    with col2:
+                        st.write(f"**Grupo:** {estudiante.grupo or 'Sin asignar'}")
+                        st.write(f"**Promedio:** {estudiante.promedio_calificaciones():.2f}")
+                        st.write(f"**Calificaciones:** {estudiante.contar_calificaciones()}")
+
+                    with col3:
+                        # Botones de acción para esta inscripción
+                        if st.button(f"Ver detalles", key=f"ver_detalles_{estudiante.id}"):
+                            st.session_state[f'mostrar_detalles_{estudiante.id}'] = not st.session_state.get(f'mostrar_detalles_{estudiante.id}', False)
+
+                    # Mostrar calificaciones si se solicitó
+                    if st.session_state.get(f'mostrar_detalles_{estudiante.id}', False):
+                        calificaciones = estudiante.calificaciones_por_laboratorio()
+
+                        if calificaciones:
+                            st.write("**Calificaciones por Laboratorio:**")
+
+                            datos_cal = []
+                            for lab, datos in calificaciones.items():
+                                datos_cal.append({
+                                    'Laboratorio': lab,
+                                    'Título': datos['titulo'],
+                                    'Calificación': f"{datos['calificacion']:.1f}" if datos['calificacion'] is not None else 'Pendiente',
+                                    'Fecha': datos['fecha'].strftime('%d/%m/%Y') if datos['fecha'] else 'N/A'
+                                })
+
+                            df_cal = pd.DataFrame(datos_cal)
+                            st.dataframe(df_cal, use_container_width=True, hide_index=True)
+                        else:
+                            st.info("No tiene calificaciones registradas en esta materia")
+
+                    st.divider()
             else:
                 st.warning(f"No se encontró estudiante con CI: {ci_busqueda}")
 
@@ -988,17 +1083,36 @@ def pagina_laboratorios():
                         st.session_state['editar_laboratorio_id'] = lab_id
                 
                 with col3:
-                    if st.button("Eliminar Laboratorio", type="primary", use_container_width=True):
-                        lab_id = opciones_labs[lab_seleccionado]
-                        
-                        if st.checkbox("Confirmar eliminación del laboratorio"):
-                            resultado = LaboratorioManager.eliminar_laboratorio(lab_id, forzar=True)
-                            
-                            if resultado['success']:
-                                st.success(resultado['mensaje'])
+                    # Manejo de estado de confirmación
+                    if 'confirmar_eliminar_laboratorio' not in st.session_state:
+                        st.session_state.confirmar_eliminar_laboratorio = None
+
+                    lab_id = opciones_labs[lab_seleccionado]
+
+                    if st.session_state.confirmar_eliminar_laboratorio == lab_id:
+                        st.warning("⚠️ ¿Está seguro de eliminar este laboratorio?")
+                        col_si, col_no = st.columns(2)
+
+                        with col_si:
+                            if st.button("✓ Sí, eliminar", type="primary", use_container_width=True, key=f"conf_lab_si_{lab_id}"):
+                                resultado = LaboratorioManager.eliminar_laboratorio(lab_id, forzar=True)
+
+                                if resultado['success']:
+                                    st.success(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_laboratorio = None
+                                    st.rerun()
+                                else:
+                                    st.error(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_laboratorio = None
+
+                        with col_no:
+                            if st.button("✗ Cancelar", use_container_width=True, key=f"conf_lab_no_{lab_id}"):
+                                st.session_state.confirmar_eliminar_laboratorio = None
                                 st.rerun()
-                            else:
-                                st.error(resultado['mensaje'])
+                    else:
+                        if st.button("Eliminar Laboratorio", type="primary", use_container_width=True):
+                            st.session_state.confirmar_eliminar_laboratorio = lab_id
+                            st.rerun()
             else:
                 st.info("No hay laboratorios registrados para esta materia")
     
@@ -1110,8 +1224,8 @@ def pagina_laboratorios():
 def pagina_calificaciones():
     """Página de gestión de calificaciones"""
     st.header("Gestión de Calificaciones")
-    
-    tab1, tab2, tab3, tab4 = st.tabs(["Lista de Calificaciones", "Nueva Calificación", "Calificar por Lotes", "Estadísticas"])
+
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Lista de Calificaciones", "Nueva Calificación", "Calificar por Lotes", "Estadísticas", "Calificaciones por Materia"])
     
     with tab1:
         st.subheader("Calificaciones por Laboratorio")
@@ -1187,17 +1301,36 @@ def pagina_calificaciones():
                         st.session_state['laboratorio_actual_id'] = lab_id
                 
                 with col2:
-                    if st.button("Eliminar Calificación", type="primary", use_container_width=True):
-                        cal_id = opciones_cal[cal_seleccionada]
-                        
-                        if st.checkbox("Confirmar eliminación de la calificación"):
-                            resultado = CalificacionManager.eliminar_calificacion(cal_id)
-                            
-                            if resultado['success']:
-                                st.success(resultado['mensaje'])
+                    # Manejo de estado de confirmación
+                    if 'confirmar_eliminar_calificacion' not in st.session_state:
+                        st.session_state.confirmar_eliminar_calificacion = None
+
+                    cal_id = opciones_cal[cal_seleccionada]
+
+                    if st.session_state.confirmar_eliminar_calificacion == cal_id:
+                        st.warning("⚠️ ¿Está seguro de eliminar esta calificación?")
+                        col_si, col_no = st.columns(2)
+
+                        with col_si:
+                            if st.button("✓ Sí, eliminar", type="primary", use_container_width=True, key=f"conf_cal_si_{cal_id}"):
+                                resultado = CalificacionManager.eliminar_calificacion(cal_id)
+
+                                if resultado['success']:
+                                    st.success(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_calificacion = None
+                                    st.rerun()
+                                else:
+                                    st.error(resultado['mensaje'])
+                                    st.session_state.confirmar_eliminar_calificacion = None
+
+                        with col_no:
+                            if st.button("✗ Cancelar", use_container_width=True, key=f"conf_cal_no_{cal_id}"):
+                                st.session_state.confirmar_eliminar_calificacion = None
                                 st.rerun()
-                            else:
-                                st.error(resultado['mensaje'])
+                    else:
+                        if st.button("Eliminar Calificación", type="primary", use_container_width=True):
+                            st.session_state.confirmar_eliminar_calificacion = cal_id
+                            st.rerun()
             else:
                 st.info("No hay calificaciones registradas para este laboratorio")
     
@@ -1248,7 +1381,7 @@ def pagina_calificaciones():
                     if not ci_estudiante:
                         st.error("El CI del estudiante es obligatorio")
                     else:
-                        estudiante = EstudianteManager.obtener_por_ci(ci_estudiante)
+                        estudiante = EstudianteManager.buscar_por_ci(ci_estudiante)
                         
                         if not estudiante:
                             st.error(f"No existe estudiante con CI: {ci_estudiante}")
@@ -1378,7 +1511,7 @@ def pagina_calificaciones():
                                 calificacion = float(calificacion_str.strip())
                                 
                                 # Verificar estudiante
-                                estudiante = EstudianteManager.obtener_por_ci(ci)
+                                estudiante = EstudianteManager.buscar_por_ci(ci)
                                 if not estudiante:
                                     errores.append(f"Línea {i}: No existe estudiante con CI {ci}")
                                     continue
@@ -1471,6 +1604,253 @@ def pagina_calificaciones():
         else:
             st.info("No hay paralelos registrados para mostrar estadísticas.")
 
+    with tab5:
+        st.subheader("Calificaciones por Materia")
+
+        # Obtener materias
+        materias = MateriaManager.listar_materias()
+
+        if not materias:
+            st.warning("No hay materias registradas.")
+            return
+
+        opciones_materias = {f"{materia.sigla} - {materia.materia}": materia.id for materia in materias}
+        materia_seleccionada = st.selectbox(
+            "Seleccionar materia:",
+            options=list(opciones_materias.keys()),
+            key="materia_calificaciones"
+        )
+
+        if materia_seleccionada:
+            materia_id = opciones_materias[materia_seleccionada]
+            materia = MateriaManager.obtener_materia(materia_id)
+
+            # Obtener todos los paralelos de la materia
+            paralelos = ParaleloManager.listar_paralelos_por_materia(materia_id)
+
+            if not paralelos:
+                st.info("No hay paralelos registrados para esta materia.")
+                return
+
+            # Obtener todos los laboratorios de la materia
+            laboratorios = LaboratorioManager.listar_laboratorios_por_materia(materia_id)
+
+            if not laboratorios:
+                st.info("No hay laboratorios registrados para esta materia.")
+                return
+
+            # Mostrar info de la materia
+            st.info(f"**{materia.sigla}** - {materia.materia}")
+            st.write(f"**Paralelos:** {len(paralelos)} | **Laboratorios:** {len(laboratorios)}")
+
+            # Crear matriz de calificaciones para todos los estudiantes en la materia
+            from models.calificacion import Calificacion
+            from models.laboratorio import Laboratorio
+
+            # Obtener estudiantes de todos los paralelos de la materia
+            estudiantes_materia = []
+            for paralelo in paralelos:
+                estudiantes_paralelo = EstudianteManager.listar_por_paralelo(paralelo.id)
+                for est in estudiantes_paralelo:
+                    estudiantes_materia.append((est, paralelo.paralelo))  # Incluir paralelo
+
+            if not estudiantes_materia:
+                st.info("No hay estudiantes registrados en esta materia.")
+                return
+
+            # Crear DataFrame con calificaciones por estudiante y laboratorio
+            datos_matriz = []
+            for estudiante, paralelo_nombre in estudiantes_materia:
+                fila = {
+                    'CI': estudiante.ci,
+                    'Estudiante': estudiante.nombre,
+                    'Paralelo': paralelo_nombre,
+                    'Grupo': estudiante.grupo or 'Sin asignar'
+                }
+
+                # Agregar calificaciones para cada laboratorio
+                for lab in laboratorios:
+                    # Buscar calificación específica para este estudiante y laboratorio
+                    calificacion = CalificacionManager.obtener_calificacion_especifica(lab.id, estudiante.id)
+                    if calificacion and calificacion.calificacion is not None:
+                        fila[f'Lab {lab.numero}'] = f"{calificacion.calificacion:.1f}"
+                    else:
+                        fila[f'Lab {lab.numero}'] = "--"
+
+                # Calcular promedio basado en la cantidad total de laboratorios
+                calificaciones = []
+                for lab in laboratorios:
+                    calificacion = CalificacionManager.obtener_calificacion_especifica(lab.id, estudiante.id)
+                    if calificacion and calificacion.calificacion is not None:
+                        calificaciones.append(calificacion.calificacion)
+
+                suma_calificaciones = sum(calificaciones) if calificaciones else 0
+                promedio = round(suma_calificaciones / len(laboratorios), 2) if len(laboratorios) > 0 else 0.0
+                fila['Promedio'] = f"{promedio:.2f}"
+
+                datos_matriz.append(fila)
+
+            df_matriz = pd.DataFrame(datos_matriz)
+
+            # Mostrar formulario vertical para editar calificaciones de un estudiante específico
+            st.subheader("Editar Calificaciones por Estudiante")
+
+            # Crear diccionario de estudiantes para el selector
+            estudiantes_dict = {}
+            for est, par in estudiantes_materia:
+                estudiantes_dict[f"{est.ci} - {est.nombre} (Paralelo {par})"] = (est, par)
+
+            if estudiantes_dict:
+                # Selector de estudiante
+                estudiante_seleccionado = st.selectbox(
+                    "Seleccionar estudiante:",
+                    options=list(estudiantes_dict.keys()),
+                    key="select_estudiante_materia"
+                )
+
+                if estudiante_seleccionado:
+                    estudiante, paralelo_nombre = estudiantes_dict[estudiante_seleccionado]
+
+                    # Mostrar información del estudiante
+                    st.info(f"**Estudiante:** {estudiante.nombre}  \n**CI:** {estudiante.ci}  \n**Paralelo:** {paralelo_nombre}")
+
+                    # Crear formulario vertical para editar todas las calificaciones
+                    with st.form(f"form_calificaciones_{estudiante.id}"):
+                        # Diccionario para almacenar los valores actuales
+                        valores_calificaciones = {}
+
+                        for lab in laboratorios:
+                            # Obtener la calificación actual
+                            calificacion = CalificacionManager.obtener_calificacion_especifica(lab.id, estudiante.id)
+                            calificacion_valor = calificacion.calificacion if calificacion and calificacion.calificacion is not None else None
+
+                            # Campo para editar la calificación
+                            nuevo_valor = st.number_input(
+                                f"Lab {lab.numero}: {lab.titulo}",
+                                value=calificacion_valor if calificacion_valor is not None else 0.0,
+                                min_value=0.0,
+                                max_value=lab.puntaje_maximo,
+                                step=0.1,
+                                key=f"cal_input_{estudiante.id}_{lab.id}",
+                                help=f"Puntaje máximo: {lab.puntaje_maximo}"
+                            )
+
+                            valores_calificaciones[lab.id] = {
+                                'actual': calificacion_valor,
+                                'nuevo': nuevo_valor,
+                                'objeto': calificacion
+                            }
+
+                        # Botón para guardar todas las calificaciones
+                        submitted = st.form_submit_button("Guardar todas las calificaciones", type="primary")
+
+                        if submitted:
+                            actualizaciones_realizadas = 0
+                            for lab_id, data in valores_calificaciones.items():
+                                nuevo_valor = data['nuevo']
+                                actual_valor = data['actual']
+                                calificacion = data['objeto']
+
+                                # Solo actualizar si hay un cambio real
+                                hay_cambio = False
+                                if actual_valor is None and nuevo_valor != 0.0:
+                                    hay_cambio = True
+                                elif actual_valor is not None and abs(nuevo_valor - actual_valor) > 0.01:
+                                    hay_cambio = True
+
+                                if hay_cambio:
+                                    lab = next(l for l in laboratorios if l.id == lab_id)
+                                    if calificacion:
+                                        # Actualizar existente
+                                        CalificacionManager.actualizar_calificacion(calificacion.id, nuevo_valor)
+                                    else:
+                                        # Crear nueva calificación
+                                        CalificacionManager.registrar_calificacion(lab.id, estudiante.id, nuevo_valor)
+                                    actualizaciones_realizadas += 1
+
+                            if actualizaciones_realizadas > 0:
+                                st.success(f"✓ {actualizaciones_realizadas} calificación(es) actualizada(s) para {estudiante.nombre}")
+                                st.rerun()
+                            else:
+                                st.info("No hubo cambios para guardar")
+            else:
+                st.info("No hay estudiantes registrados en esta materia.")
+
+            # Mostrar tabla original (puede ser útil para referencia)
+            st.subheader("Vista de Calificaciones")
+            st.dataframe(df_matriz, use_container_width=True, hide_index=True)
+
+            # Opción para exportar a Excel
+            if st.button("Exportar a Excel", use_container_width=True):
+                try:
+                    import io
+                    from openpyxl import Workbook
+                    from openpyxl.styles import Font, PatternFill, Alignment
+                    from openpyxl.utils.dataframe import dataframe_to_rows
+
+                    # Crear archivo Excel en memoria
+                    output = io.BytesIO()
+                    wb = Workbook()
+                    ws = wb.active
+                    ws.title = f"{materia.sigla}_calificaciones"
+
+                    # Agregar datos desde el DataFrame
+                    for r in dataframe_to_rows(df_matriz, index=False, header=True):
+                        ws.append(r)
+
+                    # Formatear encabezado
+                    header_font = Font(bold=True, color="FFFFFF")
+                    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                    center_alignment = Alignment(horizontal="center", vertical="center")
+
+                    for cell in ws[1]:
+                        cell.font = header_font
+                        cell.fill = header_fill
+                        cell.alignment = center_alignment
+
+                    # Autoajustar columnas
+                    for column in ws.columns:
+                        max_length = 0
+                        column_letter = column[0].column_letter
+                        for cell in column:
+                            try:
+                                if len(str(cell.value)) > max_length:
+                                    max_length = len(str(cell.value))
+                            except:
+                                pass
+                        adjusted_width = min(max_length + 2, 50)  # Limitar ancho máximo
+                        ws.column_dimensions[column_letter].width = adjusted_width
+
+                    wb.save(output)
+                    output.seek(0)
+
+                    # Guardar en el sistema de archivos
+                    import os
+                    from datetime import datetime
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"calificaciones_{materia.sigla}_{timestamp}.xlsx"
+                    filepath = os.path.join("exports", "excel", filename)
+
+                    # Crear directorio si no existe
+                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+                    # Guardar archivo
+                    with open(filepath, "wb") as f:
+                        f.write(output.getvalue())
+
+                    st.success(f"Archivo Excel exportado: {filename}")
+                    st.download_button(
+                        label="Descargar Excel",
+                        data=output.getvalue(),
+                        file_name=filename,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+
+                except ImportError:
+                    st.error("Para exportar a Excel, instale openpyxl: pip install openpyxl")
+                except Exception as e:
+                    st.error(f"Error al exportar a Excel: {e}")
+
 def pagina_reportes():
     """Página de reportes y exportación"""
     st.header("Reportes y Exportación")
@@ -1479,7 +1859,38 @@ def pagina_reportes():
     
     with tab1:
         st.subheader("Generar Reportes PDF")
-        
+
+        # Reporte consolidado (todas las materias y paralelos)
+        st.markdown("### 📚 Reporte Consolidado")
+        st.info("Genera un reporte simple de todas las materias y paralelos en un solo documento PDF")
+
+        if st.button("📋 Generar Reporte Consolidado", type="primary", use_container_width=True, help="Reporte de todas las materias y paralelos"):
+            with st.spinner("Generando reporte consolidado PDF..."):
+                try:
+                    archivo = PDFExporter.generar_reporte_consolidado()
+
+                    if archivo:
+                        st.success(f"Reporte consolidado PDF generado exitosamente!")
+                        st.info(f"Ubicación: {archivo}")
+
+                        # Mostrar botón de descarga si el archivo existe
+                        if os.path.exists(archivo):
+                            with open(archivo, "rb") as file:
+                                st.download_button(
+                                    label="📥 Descargar Reporte Consolidado",
+                                    data=file.read(),
+                                    file_name=os.path.basename(archivo),
+                                    mime="application/pdf",
+                                    use_container_width=True
+                                )
+                    else:
+                        st.error("Error al generar el reporte consolidado")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+        st.markdown("---")
+        st.markdown("### 📑 Reportes por Paralelo")
+
         # Obtener paralelos
         paralelos_disponibles = []
         materias = MateriaManager.listar_materias()
@@ -1499,36 +1910,64 @@ def pagina_reportes():
                 options=list(opciones_paralelos.keys())
             )
             
-            col1, col2 = st.columns(2)
-            
+            col1, col2, col3 = st.columns(3)
+
             with col1:
-                if st.button("Generar Reporte PDF", type="primary", use_container_width=True):
+                if st.button("📄 Reporte Simple", type="primary", use_container_width=True, help="Reporte para presentación con solo nombres y promedios"):
                     paralelo_id = opciones_paralelos[paralelo_seleccionado]
-                    
-                    with st.spinner("Generando reporte PDF..."):
+
+                    with st.spinner("Generando reporte simple PDF..."):
                         try:
-                            archivo = PDFExporter.generar_reporte_paralelo(paralelo_id)
-                            
+                            archivo = PDFExporter.generar_reporte_simple(paralelo_id)
+
                             if archivo:
-                                st.success(f"Reporte PDF generado exitosamente!")
+                                st.success(f"Reporte simple PDF generado exitosamente!")
                                 st.info(f"Ubicación: {archivo}")
-                                
+
                                 # Mostrar botón de descarga si el archivo existe
                                 if os.path.exists(archivo):
                                     with open(archivo, "rb") as file:
                                         st.download_button(
-                                            label="Descargar PDF",
+                                            label="📥 Descargar Reporte Simple",
                                             data=file.read(),
                                             file_name=os.path.basename(archivo),
-                                            mime="application/pdf"
+                                            mime="application/pdf",
+                                            use_container_width=True
                                         )
                             else:
-                                st.error("Error al generar el reporte PDF")
+                                st.error("Error al generar el reporte PDF simple")
                         except Exception as e:
                             st.error(f"Error: {e}")
-            
+
             with col2:
-                if st.button("Generar Reporte Excel", use_container_width=True):
+                if st.button("📊 Reporte Completo", use_container_width=True, help="Reporte detallado con matriz de calificaciones y estadísticas"):
+                    paralelo_id = opciones_paralelos[paralelo_seleccionado]
+
+                    with st.spinner("Generando reporte PDF completo..."):
+                        try:
+                            archivo = PDFExporter.generar_reporte_paralelo(paralelo_id)
+
+                            if archivo:
+                                st.success(f"Reporte completo PDF generado exitosamente!")
+                                st.info(f"Ubicación: {archivo}")
+
+                                # Mostrar botón de descarga si el archivo existe
+                                if os.path.exists(archivo):
+                                    with open(archivo, "rb") as file:
+                                        st.download_button(
+                                            label="📥 Descargar Reporte Completo",
+                                            data=file.read(),
+                                            file_name=os.path.basename(archivo),
+                                            mime="application/pdf",
+                                            use_container_width=True
+                                        )
+                            else:
+                                st.error("Error al generar el reporte PDF completo")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+
+            with col3:
+                if st.button("📗 Reporte Excel", use_container_width=True):
                     st.info("Funcionalidad Excel próximamente disponible")
         else:
             st.warning("No hay paralelos registrados para generar reportes.")

@@ -20,9 +20,9 @@ class EstudianteManager:
             ci (str): CI del estudiante
             paralelo_id (int): ID del paralelo
             grupo (str): Grupo del estudiante (Opcional)
-        
+
         Returns:
-            Estudiante: El estudiante creado o None si hay error
+            dict: {'success': bool, 'estudiante': Estudiante|None, 'mensaje': str}
         """
         try:
             # Verificar que el paralelo existe
@@ -36,17 +36,36 @@ class EstudianteManager:
             )
 
             print(f"[OK] Estudiante {nombre} registrado en {paralelo}")
-            return estudiante
+            return {
+                'success': True,
+                'estudiante': estudiante,
+                'mensaje': f"Estudiante {nombre} registrado exitosamente"
+            }
         except Paralelo.DoesNotExist:
-            print(f"[ERROR] No existe paralelo con ID {paralelo_id}")
-            return None
-        except IntegrityError:
-            print(f"[ERROR] Ya existe un estudiante con CI {ci} en este paralelo")
-            return None
+            mensaje = f"No existe paralelo con ID {paralelo_id}"
+            print(f"[ERROR] {mensaje}")
+            return {
+                'success': False,
+                'estudiante': None,
+                'mensaje': mensaje
+            }
+        except IntegrityError as e:
+            mensaje = f"Ya existe un estudiante con CI {ci} en este paralelo"
+            print(f"[ERROR] {mensaje}")
+            return {
+                'success': False,
+                'estudiante': None,
+                'mensaje': mensaje
+            }
         except Exception as e:
-            print(f"[ERROR] Error al registrar estudiante: {e}")
-            return None
-        
+            mensaje = f"Error al registrar estudiante: {str(e)}"
+            print(f"[ERROR] {mensaje}")
+            return {
+                'success': False,
+                'estudiante': None,
+                'mensaje': mensaje
+            }
+
     @staticmethod
     def listar_por_paralelo(paralelo_id, ordenar_por='nombre'):
         """
@@ -92,15 +111,47 @@ class EstudianteManager:
     @staticmethod
     def buscar_por_ci(ci):
         """
-        Busca un estudiante por su CI.
+        Busca un estudiante por su CI (retorna el primero si hay múltiples en diferentes paralelos).
 
         Args:
             ci(str): Cédula de identidad
-        
+
         Returns:
             Estudiante: Instancia encontrada o None
         """
         return Estudiante.buscar_por_ci(ci)
+
+    @staticmethod
+    def buscar_por_ci_en_paralelo(ci, paralelo_id):
+        """
+        Busca un estudiante por CI en un paralelo específico.
+
+        Args:
+            ci(str): Cédula de identidad
+            paralelo_id(int): ID del paralelo
+
+        Returns:
+            Estudiante: Instancia encontrada o None
+        """
+        try:
+            from models.paralelo import Paralelo
+            paralelo = Paralelo.get_by_id(paralelo_id)
+            return Estudiante.buscar_por_ci_en_paralelo(ci, paralelo)
+        except Exception:
+            return None
+
+    @staticmethod
+    def buscar_todos_por_ci(ci):
+        """
+        Busca todos los registros de un estudiante por CI (puede ser en diferentes paralelos).
+
+        Args:
+            ci(str): Cédula de identidad
+
+        Returns:
+            list: Lista de estudiantes con ese CI
+        """
+        return Estudiante.buscar_todos_por_ci(ci)
     
     @staticmethod
     def actualizar_estudiante(estudiante_id, **campos):

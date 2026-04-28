@@ -572,12 +572,14 @@ class InterfazConsola:
             
             grupo = input("Grupo (Opcional): ").strip().upper()
 
-            estudiante = EstudianteManager.registrar_estudiante(nombre, ci, paralelo_id, grupo)
-        
-            if estudiante: 
-                print(f"\n[OK] Estudiante {nombre} registrado exitosamente.")
+            resultado = EstudianteManager.registrar_estudiante(nombre, ci, paralelo_id, grupo)
+
+            if resultado is None:
+                print("[ERROR] Error interno: No se pudo procesar la inscripción")
+            elif resultado['success']:
+                print(f"\n[OK] {resultado['mensaje']}")
             else:
-                print("\n[ERROR] No se registro al estudiante.")
+                print(f"\n[ERROR] {resultado['mensaje']}")
         
         except ValueError:
             print("[ERROR] ID de paralelo no válido")
@@ -1464,16 +1466,19 @@ class InterfazConsola:
             print("     REPORTES Y EXPORTACION")
             print("="*40)
             print("1. Generar reporte PDF por paralelo")
-            print("2. Matriz de calificaciones")
-            print("3. Ver archivos generados")
+            print("2. Generar reporte consolidado (todas las materias)")
+            print("3. Matriz de calificaciones")
+            print("4. Ver archivos generados")
             print("0. Volver al menú principal")
 
             opcion = self.obtener_opcion()
             if opcion == "1":
                 self.generar_reporte_pdf()
             elif opcion == "2":
-                self.matriz_calificaciones()
+                self.generar_reporte_consolidado()
             elif opcion == "3":
+                self.matriz_calificaciones()
+            elif opcion == "4":
                 self.ver_archivos()
             elif opcion == "0":
                 break
@@ -1516,7 +1521,31 @@ class InterfazConsola:
         
         except Exception as e:
             print(f"[ERROR] Error: {e}")
-    
+
+    def generar_reporte_consolidado(self):
+        """ Genera un reporte consolidado de todas las materias y paralelos """
+        from utils.pdf_exporter import PDFExporter
+        print("\n--- Generar Reporte Consolidado ---")
+        print("Este reporte incluirá todas las materias y paralelos en un solo documento.")
+
+        confirmacion = input("\n¿Desea continuar? (s/n): ").lower()
+        if confirmacion != 's':
+            print("[INFO] Operación cancelada.")
+            return
+
+        try:
+            print("\nGenerando reporte consolidado PDF...")
+            archivo_generado = PDFExporter.generar_reporte_consolidado()
+
+            if archivo_generado:
+                print(f"[OK] Reporte consolidado generado exitosamente!")
+                print(f"[OK] Archivo generado: {archivo_generado}")
+            else:
+                print("[ERROR] No se pudo generar el reporte consolidado")
+
+        except Exception as e:
+            print(f"[ERROR] Error: {e}")
+
     def matriz_calificaciones(self):
         """ Muestra matriz de calificaciones """
         print("\n--- Matriz de Calificaciones ---")
