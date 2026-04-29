@@ -1968,7 +1968,7 @@ def pagina_reportes():
 
             with col3:
                 if st.button("📗 Reporte Excel", use_container_width=True):
-                    st.info("Funcionalidad Excel próximamente disponible")
+                    _exportar_excel_paralelo(paralelo_seleccionado)
         else:
             st.warning("No hay paralelos registrados para generar reportes.")
     
