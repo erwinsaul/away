@@ -50,7 +50,7 @@ def inicializar_bd():
     from .laboratorio import Laboratorio
     from .calificacion import Calificacion
 
-    database.connect()
+    database.connect(reuse_if_open=True)
 
     # Crear todas las tablas
     database.create_tables([
