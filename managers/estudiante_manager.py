@@ -312,7 +312,7 @@ class EstudianteManager:
 
             for i, estudiante in enumerate(estudiantes):
                 numero_grupo = (i // estudiantes_por_grupo) + 1
-                nombre_grupo = f"Grupo {numero_grupo}"
+                nombre_grupo = f"GRUPO {numero_grupo}".upper()
 
                 estudiante.grupo = nombre_grupo
                 estudiante.save()
