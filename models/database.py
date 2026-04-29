@@ -57,10 +57,10 @@ def inicializar_bd():
         Materia, Paralelo, Estudiante, Laboratorio, Calificacion
     ], safe=True)
 
-    print("Base de datos inicializada correctamente")
+    logger.info("Base de datos inicializada correctamente")
 
 def cerrar_bd():
     """Cierra la conexión a la base de datos""" 
     if not database.is_closed():
         database.close()
-        print("Conexión cerrada")
+        logger.info("Conexión cerrada")
