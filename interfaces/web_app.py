@@ -19,7 +19,7 @@ from utils.pdf_exporter import PDFExporter
 # Configuración de la página
 st.set_page_config(
     page_title="Sistema de Gestión de Laboratorios",
-    page_icon="��",
+    page_icon="\U0001F393",
     layout="wide",
     initial_sidebar_state="expanded"
 )
