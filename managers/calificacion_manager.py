@@ -191,7 +191,7 @@ class CalificacionManager:
             }
     
     @staticmethod
-    def calificar_por_lotes(laboratorio_id, calificacion_dict):
+    def calificar_por_lotes(laboratorio_id, calificaciones_dict):
         """
         Registra múltiples calificacion de una vez.
 
@@ -208,7 +208,7 @@ class CalificacionManager:
             exitosas = 0
             errores = []
 
-            for estudiante_id, calificacion in calificacion_dict.items():
+            for estudiante_id, calificacion in calificaciones_dict.items():
                 try:
                     estudiante = Estudiante.get_by_id(estudiante_id)
 
