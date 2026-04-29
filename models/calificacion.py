@@ -30,7 +30,7 @@ class Calificacion(BaseModel):
         )
     
     def __str__(self):
-        nota_str = f"{self.calificacion:0.1f}" if self.calificacion else "Sin nota"
+        nota_str = f"{self.calificacion:0.1f}" if self.calificacion is not None else "Sin nota"
         return f"{self.id_estudiante.nombre} - {self.id_laboratorio.titulo}: {nota_str}"
     
     def porcentaje_nota(self):
