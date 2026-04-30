@@ -610,7 +610,7 @@ class InterfazConsola:
 
             orden_opcion = input("Opcion (1-3): ").strip() or "1"
             orden_map = {"1": "nombre", "2": "grupo", "3": "ci"}
-            orden = orden_map[orden_opcion]
+            orden = orden_map.get(orden_opcion, "nombre")
 
             estudiantes = EstudianteManager.listar_por_paralelo(paralelo_id, orden)
 
