@@ -1221,8 +1221,8 @@ class InterfazConsola:
 
         for calificacion in calificaciones:
             lab = calificacion.id_laboratorio
-            nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion else "Sin nota"
-            print(f"{calificacion.id:2d} | {lab.numero:2d} | {lab.titulo:20s} | {nota_str:5.2f}")
+            nota_str = f"{calificacion.calificacion:.2f}" if calificacion.calificacion is not None else "Sin nota"
+            print(f"{calificacion.id:2d} | {lab.numero:2d} | {lab.titulo:20s} | {nota_str:>8s}")
 
         try:
             calificacion_id = int(input("\nID de la calificación a actualizar: "))
