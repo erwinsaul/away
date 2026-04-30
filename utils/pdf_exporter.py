@@ -42,6 +42,7 @@ class PDFExporter:
             if not ruta_archivo:
                 timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
                 nombre_archivo = f"reporte_{materia.sigla}_{paralelo.paralelo}_{timestamp}.pdf"
+                BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 ruta_archivo = os.path.join("exports", "pdfs", nombre_archivo)
             
             # Crear directorio si no existe
