@@ -196,8 +196,8 @@ class EstudianteManager:
             # Actualizar campos
             for campo, valor in campos.items():
                 if hasattr(estudiante, campo):
-                    setattr(estudiante, campo, valor.strip() if valor else None)
-                else:
+                    if isinstance(valor, str):
+                        valor = valor.strip() if valor else None
                     setattr(estudiante, campo, valor)
             
             estudiante.save()
