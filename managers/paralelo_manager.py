@@ -111,7 +111,11 @@ class ParaleloManager:
                 campos['paralelo'] = nuevo_nombre
             
             for campo, valor in campos.items():
-                if hasattr(paralelo, campo):
+                if hasattr(paralelo, campo) and valor is not None:
+                    if isinstance(valor, str):
+                        valor = valor.strip()
+                        if campo == 'paralelo':
+                            valor = valor.upper()
                     setattr(paralelo, campo, valor)
             
             paralelo.save()
