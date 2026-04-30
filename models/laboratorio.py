@@ -88,7 +88,7 @@ class Laboratorio(BaseModel):
         total_calificaciones = sum(notas)
         
         # Calcular promedio considerando todos los estudiantes posibles
-        promedio = total_calificaciones / total_estudiantes
+        promedio = total_calificaciones / total_estudiantes if total_estudiantes else 0.0
         aprobados = len([nota for nota in notas if nota >= 51])
         
         return{
