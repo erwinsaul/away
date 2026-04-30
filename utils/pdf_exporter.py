@@ -511,7 +511,8 @@ class PDFExporter:
                     PDFExporter._agregar_pie_simple(contenido, styles)
 
                     # Agregar salto de página entre paralelos (excepto en el último)
-                    contenido.append(PageBreak())
+                    if i < len(paralelos) - 1:
+                        contenido.append(PageBreak())
 
             # Si no hay paralelos, agregar mensaje
             if total_paralelos == 0:
