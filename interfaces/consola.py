@@ -1396,7 +1396,7 @@ class InterfazConsola:
                 print("Operacion Cancelada")
                 return
             
-            resultado = CalificacionManager.calificar_por_lote(laboratorio_id, calificaciones_dict)
+            resultado = CalificacionManager.calificar_por_lotes(laboratorio_id, calificaciones_dict)
 
             if resultado['success']:
                 print(f"[OK] {resultado['mensaje']}")
