@@ -242,7 +242,7 @@ class PDFExporter:
         tabla_calificaciones.setStyle(TableStyle([
             # Encabezados
             ('BACKGROUND', (0,0), (-1,0), colors.darkblue),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.black),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
             ('FONTSIZE', (0,0), (-1,0), 8),
