@@ -29,11 +29,14 @@ class EstudianteManager:
             paralelo = Paralelo.get_by_id(paralelo_id)
 
             estudiante = Estudiante.create(
-                nombre = nombre.strip().upper(),
+                nombre = (nombre or "").strip().upper(),
                 ci = ci.strip().upper(),
                 id_paralelo = paralelo,
                 grupo = grupo.strip().upper() if grupo else None
             )
+
+            if not estudiante.nombre:
+                return {'success': False, 'mensaje': "Nombre requerido"}
 
             print(f"[OK] Estudiante {nombre} registrado en {paralelo}")
             return {
