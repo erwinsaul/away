@@ -55,22 +55,4 @@ class Materia(BaseModel):
             "laboratorios": self.contar_laboratorios(),
             "estudiantes": self.contar_estudiantes_total(),
         }
-    
-    @classmethod
-    def obtener_por_materia(cls, materia, ordenar_por_numero=True):
-        """Obtiene todos los laboratorios de una materia"""
-        query = cls.select().where(cls.id_materia == materia)
-        if ordenar_por_numero:
-            query = query.order_by(cls.sigla)
-        return query
-    
-    @classmethod
-    def obtener_siguiente_numero(cls, materia):
-        """Obtiene el siguiente número disponible para un laboratorio"""
-        ultimo = (cls.select()
-                    .where(cls.id_materia == materia)
-                    .order_by(cls.sigla.desc())
-                    .first())
-        return (ultimo.numero + 1) if ultimo else 1
-
-    
+     
