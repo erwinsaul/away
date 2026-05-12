@@ -503,7 +503,7 @@ class PDFExporter:
                 # Obtener todos los paralelos de la materia
                 paralelos = materia.paralelos.order_by(Paralelo.paralelo)
 
-                for paralelo in paralelos:
+                for i, paralelo in enumerate(paralelos):
                     total_paralelos += 1
 
                     # Agregar elementos del reporte simple para cada paralelo
