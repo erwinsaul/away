@@ -181,7 +181,7 @@ class EstudianteManager:
                     ).exists()
 
                     if existe:
-                        print("[ERROR] Ya existe estudiante con CI {nuevo_ci}")
+                        print(f"[ERROR] Ya existe estudiante con CI {nuevo_ci}")
                         return False
                 
                 campos['ci'] = nuevo_ci

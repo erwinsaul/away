@@ -105,7 +105,7 @@ class ParaleloManager:
                     ).exists()
 
                     if existe:
-                        print("[ERROR] Ya existe el paralelo {nuevo_nombre} en esta materia")
+                        print(f"[ERROR] Ya existe el paralelo {nuevo_nombre} en esta materia")
                         return False
                 
                 campos['paralelo'] = nuevo_nombre
