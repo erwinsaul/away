@@ -11,7 +11,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'laboratorios.db
 # Crear el directorio si no existe
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-# Configurar SQLite (base de dats en archivo)
+# Configurar SQLite (base de datos en archivo)
 database = SqliteDatabase(DB_PATH)
 
 class BaseModel(Model):

@@ -139,7 +139,7 @@ class Calificacion(BaseModel):
                     nota = cal.calificacion if cal.calificacion else 0
                     fila["calificaciones"][f"lab_{lab.numero}"] = nota
 
-                    if cal.calificacion:
+                    if cal.calificacion is not None:
                         total_notas = total_notas + cal.calificacion
 
                 except cls.DoesNotExist:
