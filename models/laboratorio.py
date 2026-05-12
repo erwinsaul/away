@@ -89,7 +89,8 @@ class Laboratorio(BaseModel):
         
         # Calcular promedio considerando todos los estudiantes posibles
         promedio = total_calificaciones / total_estudiantes if total_estudiantes else 0.0
-        aprobados = len([nota for nota in notas if nota >= 51])
+        nota_aprobacion = self.puntaje_maximo * 0.51
+        aprobados = len([nota for nota in notas if nota >= nota_aprobacion])
         
         return{
             "total_calificaciones": len(notas),

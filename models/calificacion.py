@@ -90,7 +90,8 @@ class Calificacion(BaseModel):
         
         # Calcular aprobados basados en las notas existentes
         notas = [cal.calificacion for cal in calificaciones_con_nota]
-        aprobados = len([nota for nota in notas if nota >= 51])
+        nota_aprobacion = self.puntaje_maximo * 0.51
+        aprobados = len([nota for nota in notas if nota >= nota_aprobacion])
         
         return{
             "total_calificaciones": len(notas),
