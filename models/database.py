@@ -1,6 +1,9 @@
 from peewee import *
 import os
 from datetime import datetime
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('database')
 
 # Definir donde estará nuestra base de datos
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'laboratorios.db')
