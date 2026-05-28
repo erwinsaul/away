@@ -454,9 +454,14 @@ class PDFExporter:
             styles (Styles): Estilos del documento
         """
         contenido.append(Spacer(1, 20))
-
+        
+        estilo_firma = ParagraphStyle(
+            'FirmaCentrado',
+            parent=styles["Normal"],
+            alignment=TA_CENTER
+        )
         # Línea para firma centrada
-        linea = Paragraph("<para align=center>_____________________________________________</para>", styles["Normal"])
+        linea = Paragraph("_____________________________________________", estilo_firma)
         contenido.append(linea)
 
     @staticmethod
