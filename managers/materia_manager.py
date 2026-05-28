@@ -2,7 +2,7 @@
 Manager para la tabla de materias.
 Contiene toda la lógica relacionada con crear, buscar y moficiar materias.
 """
-
+ 
 from models.materia import Materia
 from peewee import IntegrityError
 
@@ -92,7 +92,7 @@ class MateriaManager:
             materia = Materia.get_by_id(materia_id)
 
             # Validar sigla única si se está actualizando
-            if 'sigla' in campos:
+            if 'sigla' in campos and campos['sigla'] is not None:
                 sigla_nueva = campos['sigla'].strip().upper()
                 if sigla_nueva != materia.sigla:
                     existe = Materia.select().where(

@@ -1,7 +1,7 @@
 """
 Manager para gestionar estudiantes.
 Incluye registro, búsqueda y organzación por grupos.
-"""
+""" 
 
 from models.estudiante import Estudiante
 from models.paralelo import Paralelo
@@ -172,7 +172,7 @@ class EstudianteManager:
         try:
             estudiante = Estudiante.get_by_id(estudiante_id)
 
-            if 'ci' in campos:
+            if 'ci' in campos and campos['ci'] is not None:
                 nuevo_ci = campos['ci'].strip()
                 if nuevo_ci != estudiante.ci:
                     existe = Estudiante.select().where(

@@ -1,3 +1,5 @@
+# Archivos de datos
+backups/
 entorno_lab/
 # Archivos generados de Python
 __pycache__/

@@ -9,5 +9,5 @@ class ExcelExporter:
     @staticmethod
     def generar_reporte_paralelo(paralelo, ruta_archivo=None):
         """ Genera un reporte a Excel """
-        NotImplementedError("Implementacion pendiente")
+        raise NotImplementedError("Implementacion pendiente")
         

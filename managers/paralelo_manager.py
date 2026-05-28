@@ -2,7 +2,7 @@
 Manager para gestionar paralelos.
 Contiene toda la lógica relacionada con crear, buscar y moficiar paralelos.
 """
-
+ 
 from models.paralelo import Paralelo
 from models.materia import Materia
 from models.estudiante import Estudiante
@@ -95,7 +95,7 @@ class ParaleloManager:
             paralelo = Paralelo.get_by_id(paralelo_id)
 
             # Validar nombre único dentro de la materia si se actualiza
-            if 'paralelo' in campos:
+            if 'paralelo' in campos and campos['paralelo'] is not None:
                 nuevo_nombre = campos['paralelo'].strip().upper()
                 if nuevo_nombre != paralelo.paralelo:
                     existe = Paralelo.select().where(
