@@ -136,7 +136,7 @@ class Calificacion(BaseModel):
                         (cls.id_estudiante == estudiante) &
                         (cls.id_laboratorio == lab)
                     )
-                    nota = cal.calificacion if cal.calificacion else 0
+                    nota = cal.calificacion
                     fila["calificaciones"][f"lab_{lab.numero}"] = nota
 
                     if cal.calificacion is not None:
