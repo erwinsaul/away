@@ -27,10 +27,11 @@ class EstudianteManager:
         try:
             # Verificar que el paralelo existe
             paralelo = Paralelo.get_by_id(paralelo_id)
-
+            nombre = (nombre or "").strip().upper()
+            ci = (ci or "").strip().upper()
             estudiante = Estudiante.create(
-                nombre = (nombre or "").strip().upper(),
-                ci = ci.strip().upper(),
+                nombre = nombre,
+                ci = ci,
                 id_paralelo = paralelo,
                 grupo = grupo.strip().upper() if grupo else None
             )
