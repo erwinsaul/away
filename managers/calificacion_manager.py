@@ -210,6 +210,19 @@ class CalificacionManager:
 
             for estudiante_id, calificacion in calificaciones_dict.items():
                 try:
+                    if calificacion is not None:
+                        try:
+                            calificacion_val = flat(calificacion)
+                        except ValueError:
+                            errores.append(f"Estudiante {estudiante_id}: Calificacion no es número válido")
+                            continue
+
+                        if calificacion_val <0 or calificacion_val > laboratorio.puntaje_maximo:
+                            errores.append(f"Estudiante {estudiante_id}: Calificacion fuera de rango (0 - {laboratorio.puntaje_maximo}).")
+                    
+                    else:
+                        calificacion_val = None
+                    
                     estudiante = Estudiante.get_by_id(estudiante_id)
 
                     # Verificar si ya existe calificación
@@ -217,14 +230,14 @@ class CalificacionManager:
                     cal_existente = CalificacionManager.obtener_calificacion_especifica(laboratorio_id, estudiante_id)
                     if cal_existente:
                         # Actualizar existente
-                        cal_existente.calificacion = calificacion
+                        cal_existente.calificacion = calificacion_val
                         cal_existente.save()
                     else:
                         # Crear nueva
                         Calificacion.create(
                             id_laboratorio=laboratorio,
                             id_estudiante=estudiante,
-                            calificacion=calificacion
+                            calificacion=calificacion_val
                         )
                     exitosas = exitosas + 1
                 except Exception as e:
